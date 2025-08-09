@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Me.Memory.Buffers;
 
 [StructLayout(LayoutKind.Auto)]
-public readonly struct MemoryOwner<T> : IDisposable
+public struct MemoryOwner<T> : IDisposable
 {
    public int Capacity
    {
@@ -17,6 +17,8 @@ public readonly struct MemoryOwner<T> : IDisposable
    {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get;
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      set;
    }
 
    public Span<T> Span
@@ -41,6 +43,17 @@ public readonly struct MemoryOwner<T> : IDisposable
    {
       Buffer = ArrayPool<T>.Shared.Rent(minSize);
       Length = minSize;
+   }
+
+   public bool TryResize(int newSize)
+   {
+      if (newSize > Capacity)
+      {
+         return false;
+      }
+
+      Length = newSize;
+      return true;
    }
    
    public void Dispose()
