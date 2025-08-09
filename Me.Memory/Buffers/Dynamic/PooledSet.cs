@@ -24,6 +24,12 @@ public sealed class PooledSet<T> : IDisposable
       get => _list[index];
    }
    
+   public T[] Array
+   {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => _list.Array;
+   }
+   
    private readonly PooledList<T> _list;
    
    public PooledSet(int initialCapacity)

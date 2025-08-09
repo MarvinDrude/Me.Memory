@@ -7,8 +7,8 @@ namespace Me.Memory.Serialization.Formatters.Collections;
 public sealed class DictionarySerializer<TKey, TValue> : ISerializer<Dictionary<TKey, TValue>>
    where TKey : notnull
 {
-   private static readonly ISerializer<TKey> KeySerializer = SerializerCache<TKey>.Instance;
-   private static readonly ISerializer<TValue> ValueSerializer = SerializerCache<TValue>.Instance;
+   private static ISerializer<TKey> KeySerializer => SerializerCache<TKey>.Instance;
+   private static ISerializer<TValue> ValueSerializer => SerializerCache<TValue>.Instance;
    
    public void Write(ref ByteWriter writer, ref Dictionary<TKey, TValue> value)
    {
@@ -29,8 +29,8 @@ public sealed class DictionarySerializer<TKey, TValue> : ISerializer<Dictionary<
 
    public bool TryRead(ref ByteReader reader, [MaybeNullWhen(false)] out Dictionary<TKey, TValue> value)
    {
-      Dictionary<TKey, TValue> result = [];
       var count = reader.ReadLittleEndian<int>();
+      var result = new Dictionary<TKey, TValue>(count);
 
       var keySerializer = KeySerializer;
       var valueSerializer = ValueSerializer;

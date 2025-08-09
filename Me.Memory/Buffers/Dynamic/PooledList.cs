@@ -24,6 +24,12 @@ public sealed class PooledList<T> : IDisposable
       get => _owner.Length;
    }
 
+   public T[] Array
+   {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => _owner.Buffer;
+   }
+
    public T this[int index]
    {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
