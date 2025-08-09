@@ -58,6 +58,9 @@ public struct MemoryOwner<T> : IDisposable
    
    public void Dispose()
    {
+      if (Length <= 0 || Buffer is null) 
+         return;
+      
       ArrayPool<T>.Shared.Return(Buffer);
    }
 }

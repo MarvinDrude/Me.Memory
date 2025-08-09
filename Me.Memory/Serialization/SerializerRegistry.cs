@@ -1,15 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Me.Memory.Serialization.Formatters.Collections;
 using Me.Memory.Serialization.Formatters.Common;
 using Me.Memory.Serialization.Interfaces;
 
 namespace Me.Memory.Serialization;
-
-public static class SerializerCache<T>
-{
-   public static readonly ISerializer<T> Instance = SerializerRegistry.For<T>();
-}
 
 public static class SerializerRegistry
 {
@@ -77,6 +73,16 @@ public static class SerializerRegistry
             ?? throw new InvalidOperationException($"No serializer registered for type {typeof(T)}");
          
          return Cache<T>.Instance ??= unmanagedSerializer;
+      }
+
+      if (type.IsArray)
+      {
+         var arrayType = typeof(ArraySerializer<>).MakeGenericType(
+            type.GetElementType() ?? throw new InvalidOperationException());
+         var arraySerializer = (Activator.CreateInstance(arrayType) as ISerializer<T>)
+            ?? throw new InvalidOperationException($"No serializer registered for type {typeof(T)}");
+         
+         return Cache<T>.Instance ??= arraySerializer;
       }
       
       if (type.IsGenericType)

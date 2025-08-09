@@ -1,9 +1,12 @@
 ﻿
-
+using Me.Memory.Extensions;
 using Me.Memory.Serialization;
 
-var test = SerializerCache<string>.Instance;
-var test2 = SerializerCache<List<string>>.Instance;
-var test23 = SerializerCache<List<List<string>>>.Instance;
+int[] test = [1, 2, 3, 4, 5];
 
-Console.WriteLine(test);
+
+
+var memory = test.SerializeMemory();
+var next = SerializerCache<int[]>.DeserializeMemory(memory.Span);
+
+Console.WriteLine(next);
