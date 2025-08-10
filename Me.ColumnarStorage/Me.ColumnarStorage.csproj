@@ -7,8 +7,4 @@
       <LangVersion>Preview</LangVersion>
    </PropertyGroup>
 
-   <ItemGroup>
-     <Folder Include="Common\" />
-   </ItemGroup>
-
 </Project>
