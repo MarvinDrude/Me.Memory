@@ -1,5 +1,4 @@
 ﻿<Solution>
-  <Project Path="Me.ColumnarStorage\Me.ColumnarStorage.csproj" Type="Classic C#" />
   <Project Path="Me.Experiments\Me.Experiments.csproj" Type="Classic C#" />
   <Project Path="Me.Memory\Me.Memory.csproj" Type="Classic C#" />
 </Solution>

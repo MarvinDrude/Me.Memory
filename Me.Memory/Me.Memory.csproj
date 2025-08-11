@@ -5,6 +5,20 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <LangVersion>Preview</LangVersion>
+      <IsPackable>true</IsPackable>
+   </PropertyGroup>
+
+   <PropertyGroup>
+      <Title>Me.Memory</Title>
+      <Description>Internal Use.</Description>
+      <Authors>Marvin Drude</Authors>
+      <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <PackageReadmeFile>README.md</PackageReadmeFile>
+      <PublishRepositoryUrl>true</PublishRepositoryUrl>
+      <RepositoryUrl>https://github.com/MarvinDrude/Me.Memory</RepositoryUrl>
+      <AssemblyVersion>1.0.0</AssemblyVersion>
+      <FileVersion>1.0.0</FileVersion>
+      <Version>1.0.0</Version>
    </PropertyGroup>
 
 </Project>

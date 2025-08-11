@@ -102,8 +102,7 @@ public static class SerializerRegistry
       throw new InvalidOperationException($"No serializer registered for type {typeof(T)}");
    }
    
-   [ModuleInitializer]
-   internal static void ModuleInit()
+   public static void InitializeDefaults()
    {
       RegisterFromAssembly(typeof(SerializerRegistry).Assembly);
       
