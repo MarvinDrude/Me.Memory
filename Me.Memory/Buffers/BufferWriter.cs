@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Me.Memory.Buffers;
 
 [StructLayout(LayoutKind.Auto)]
-public ref struct BufferWriter<T> : IDisposable
+public ref partial struct BufferWriter<T> : IDisposable
 {
    public readonly int Capacity
    {
