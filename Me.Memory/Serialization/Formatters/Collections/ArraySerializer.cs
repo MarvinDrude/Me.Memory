@@ -13,9 +13,11 @@ public sealed class ArraySerializer<T> : ISerializer<T[]>
       var itemSerializer = ItemSerializer;
       writer.WriteLittleEndian(value.Length);
 
-      foreach (ref var current in value.AsSpan())
+      var span = value.AsSpan();
+      for (var index = 0; index < span.Length; index++)
       {
-         itemSerializer.Write(ref writer, ref current);       
+         ref var current = ref span[index];
+         itemSerializer.Write(ref writer, ref current);
       }
    }
 
@@ -41,5 +43,19 @@ public sealed class ArraySerializer<T> : ISerializer<T[]>
       }
       
       return true;
+   }
+
+   public int CalculateByteLength(ref T[] value)
+   {
+      var length = sizeof(int);
+      var span = value.AsSpan();
+      
+      for (var index = 0; index < span.Length; index++)
+      {
+         ref var current = ref span[index];
+         length += ItemSerializer.CalculateByteLength(ref current);
+      }
+
+      return length;
    }
 }

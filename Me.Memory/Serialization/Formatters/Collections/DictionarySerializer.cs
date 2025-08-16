@@ -50,4 +50,19 @@ public sealed class DictionarySerializer<TKey, TValue> : ISerializer<Dictionary<
       value = result;
       return true;
    }
+
+   public int CalculateByteLength(ref Dictionary<TKey, TValue> value)
+   {
+      var length = sizeof(int);
+      foreach (var (key, ob) in value)
+      {
+         var keySers = key;
+         var valueSers = ob;
+         
+         length += KeySerializer.CalculateByteLength(ref keySers);
+         length += ValueSerializer.CalculateByteLength(ref valueSers);
+      }
+      
+      return length;
+   }
 }

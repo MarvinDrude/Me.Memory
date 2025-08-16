@@ -9,6 +9,8 @@ public interface ISerializer<T> : ISerializer
    public void Write(ref ByteWriter writer, ref T value);
    
    public bool TryRead(ref ByteReader reader, [MaybeNullWhen(false)] out T value);
+
+   public int CalculateByteLength(ref T value);
 }
 
 public interface ISerializer;

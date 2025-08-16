@@ -40,4 +40,16 @@ public sealed class HashSetSerializer<T> : ISerializer<HashSet<T>>
 
       return true;
    }
+
+   public int CalculateByteLength(ref HashSet<T> value)
+   {
+      var length = sizeof(int);
+      foreach (var current in value)
+      {
+         var copy = current;
+         length += ItemSerializer.CalculateByteLength(ref copy);
+      }
+      
+      return length;
+   }
 }

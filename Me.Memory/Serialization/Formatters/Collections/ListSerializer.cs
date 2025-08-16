@@ -43,4 +43,15 @@ public sealed class ListSerializer<T> : ISerializer<List<T>>
       
       return true;
    }
+   
+   public int CalculateByteLength(ref List<T> value)
+   {
+      var length = sizeof(int);
+      foreach (ref var current in CollectionsMarshal.AsSpan(value))
+      {
+         length += ItemSerializer.CalculateByteLength(ref current);
+      }
+      
+      return length;
+   }
 }

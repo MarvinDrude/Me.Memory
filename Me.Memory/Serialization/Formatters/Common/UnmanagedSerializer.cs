@@ -19,4 +19,10 @@ public sealed class UnmanagedSerializer<T> : ISerializer<T>
       value = reader.ReadLittleEndian<T>();
       return true;
    }
+
+   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+   public int CalculateByteLength(ref T value)
+   {
+      return Unsafe.SizeOf<T>();
+   }
 }

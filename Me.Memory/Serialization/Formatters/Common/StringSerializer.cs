@@ -31,4 +31,9 @@ public sealed class StringSerializer : ISerializer<string>
       
       return true;
    }
+
+   public int CalculateByteLength(ref string value)
+   {
+      return sizeof(int) + _encoding.GetByteCount(value.AsSpan());
+   }
 }

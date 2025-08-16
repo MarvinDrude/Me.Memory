@@ -4,6 +4,8 @@ namespace Me.Memory.Buffers;
 
 public ref partial struct BufferWriter<T>
 {
+   // Operator overloads
+   
    [MethodImpl(MethodImplOptions.AggressiveInlining)]
    public void operator += (T element) => Add(element);
    

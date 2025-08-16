@@ -46,4 +46,15 @@ public sealed class PooledSetSerializer<T> : ISerializer<PooledSet<T>>
 
       return true;
    }
+
+   public int CalculateByteLength(ref PooledSet<T> value)
+   {
+      var length = sizeof(int);
+      foreach (ref var current in value.WrittenSpan)
+      {
+         length += ItemSerializer.CalculateByteLength(ref current);
+      }
+      
+      return length;
+   }
 }
