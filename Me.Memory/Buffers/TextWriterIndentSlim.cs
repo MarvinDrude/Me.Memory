@@ -213,7 +213,7 @@ public ref partial struct TextWriterIndentSlim : IDisposable
    
    public override string ToString()
    {
-      return _buffer.WrittenSpan.Trim().ToString();
+      return _buffer.WrittenSpan.ToString();
    }
    
    public void Dispose()
