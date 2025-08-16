@@ -2,6 +2,9 @@
 using Me.Memory.Buffers;
 
 Console.WriteLine("Hello World!");
+var x = 20;
 
-var writer = new BufferWriter<char>();
-writer += "asdads";
+var writer = new TextWriterIndentSlim(stackalloc char[256], stackalloc char[128]);
+writer.WriteInterpolated($"{x} - {x}");
+
+Console.WriteLine(writer.ToString());

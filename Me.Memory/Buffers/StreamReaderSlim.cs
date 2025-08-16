@@ -3,6 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace Me.Memory.Buffers;
 
+/// <summary>
+/// Provides efficient reading operations for a stream with a focus on minimizing allocations and supporting high-performance scenarios.
+/// This ref struct is designed to provide a mechanism to read data from streams into a reusable buffer to reduce overhead.
+/// </summary>
 [StructLayout(LayoutKind.Auto)]
 public ref struct StreamReaderSlim : IDisposable
 {
@@ -13,7 +17,7 @@ public ref struct StreamReaderSlim : IDisposable
    }
    
    private readonly Stream _stream;
-   private readonly MemoryOwner<byte> _owner;
+   private MemoryOwner<byte> _owner;
 
    private readonly Span<byte> _buffer;
 

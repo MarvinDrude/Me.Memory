@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Me.Memory.Buffers;
 
 namespace Me.Memory.Extensions;
 
@@ -19,6 +20,14 @@ public static class ByteWriteExtensions
          return size;
       }
 
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      public int WriteBigEndian(ref BufferWriter<byte> buffer, bool movePosition = true)
+      {
+         var size = Unsafe.SizeOf<T>();
+         return value.WriteBigEndian(
+            buffer.AcquireSpan(size, movePosition));
+      }
+
       public int WriteLittleEndian(scoped Span<byte> buffer)
       {
          var size = Unsafe.SizeOf<T>();
@@ -28,6 +37,14 @@ public static class ByteWriteExtensions
          if (!BitConverter.IsLittleEndian) buffer.Reverse();
 
          return size;
+      }
+      
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      public int WriteLittleEndian(ref BufferWriter<byte> buffer, bool movePosition = true)
+      {
+         var size = Unsafe.SizeOf<T>();
+         return value.WriteLittleEndian(
+            buffer.AcquireSpan(size, movePosition));
       }
    }
 }

@@ -62,4 +62,9 @@ public static class SerializerCache<T>
          ? value 
          : throw new InvalidOperationException($"Failed to deserialize {typeof(T)}");
    }
+
+   public static int CalculateByteLength(T value)
+   {
+      return Instance.CalculateByteLength(ref value);
+   }
 }
