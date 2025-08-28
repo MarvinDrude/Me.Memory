@@ -6,6 +6,7 @@
       <Nullable>enable</Nullable>
       <LangVersion>Preview</LangVersion>
       <IsPackable>true</IsPackable>
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
    </PropertyGroup>
 
    <PropertyGroup>

@@ -6,31 +6,27 @@ namespace Me.Memory.Buffers;
 
 public static class TextWriterIndentSlimInterpolatedStringHandlerExtensions
 {
-   public static int WriteInterpolated(this ref TextWriterIndentSlim writer, IFormatProvider? provider,
+   public static void WriteInterpolated(this ref TextWriterIndentSlim writer, IFormatProvider? provider,
       [InterpolatedStringHandlerArgument(nameof(writer), nameof(provider))]
-      scoped in TextWriterIndentSlimInterpolatedStringHandler handler)
-   {
-      return handler.Count;
-   }
+      scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
+   { }
    
-   public static int WriteInterpolated(this ref TextWriterIndentSlim writer,
+   public static void WriteInterpolated(this ref TextWriterIndentSlim writer,
       [InterpolatedStringHandlerArgument(nameof(writer))]
-      scoped in TextWriterIndentSlimInterpolatedStringHandler handler)
-   {
-      return handler.Count;
-   }
+      scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
+   { }
 }
 
 [InterpolatedStringHandler]
 [EditorBrowsable(EditorBrowsableState.Never)]
 [StructLayout(LayoutKind.Auto)]
-public ref struct TextWriterIndentSlimInterpolatedStringHandler
+public unsafe ref struct TextWriterIndentSlimInterpolatedStringHandler
 {
-   private readonly ref byte _writerReference;
-   public ref TextWriterIndentSlim Writer
+   private readonly nint _writerPointer;
+   private ref TextWriterIndentSlim Writer
    {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      get => ref Unsafe.As<byte, TextWriterIndentSlim>(ref _writerReference);
+      get => ref Unsafe.AsRef<TextWriterIndentSlim>((void*)_writerPointer);
    }
 
    public int Count { get; private set; }
@@ -40,11 +36,11 @@ public ref struct TextWriterIndentSlimInterpolatedStringHandler
    public TextWriterIndentSlimInterpolatedStringHandler(
       int literalLength,
       int formattedCount,
-      ref TextWriterIndentSlim writer,
+      scoped ref TextWriterIndentSlim writer,
       IFormatProvider? provider = null)
    {
-      _writerReference = ref Unsafe.As<TextWriterIndentSlim, byte>(ref writer);
-
+      _writerPointer = (nint)Unsafe.AsPointer(ref writer);
+      
       _provider = provider;
       Count = 0;
    }
