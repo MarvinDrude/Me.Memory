@@ -22,3 +22,11 @@ foreach (ref var item in test)
 var test1 = new SequenceArray<string>(new string[] { "a", "b", "c", "d" });
 
 Console.WriteLine(test == test1);
+
+
+using var builder = new ArrayBuilder<string>();
+builder.Add("a");
+builder.Add("b");
+
+builder.Clear();
+Console.WriteLine(builder.Count);
