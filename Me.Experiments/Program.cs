@@ -13,7 +13,7 @@ writer.WriteInterpolated($"{x} - {x}");
 
 Console.WriteLine(writer.ToString());
 
-var circ = new CircularBufferSlim<string>(new string[4]);
+using var circ = new CircularBuffer<string>(4);
 
 circ.Add("1");
 circ.Add("2");
@@ -38,6 +38,7 @@ foreach (ref var item in circ)
 {
    Console.WriteLine(item);
 }
+Console.WriteLine(circ[3]);
 Console.WriteLine("==");
 
 Console.WriteLine(circ.WrittenTwoSpan.Length);
