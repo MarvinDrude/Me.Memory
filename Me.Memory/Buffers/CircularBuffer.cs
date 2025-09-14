@@ -63,6 +63,14 @@ public sealed class CircularBuffer<T> : IDisposable
          Count++;
       }
    }
+
+   public void Clear()
+   {
+      Buffer.Clear();
+      
+      Count = 0;
+      _start = 0;
+   }
    
    public Enumerator GetEnumerator() => new(this);
    

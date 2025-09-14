@@ -69,6 +69,13 @@ public ref struct CircularBufferSlim<T>
       }
    }
 
+   public void Clear()
+   {
+      _buffer.Clear();
+      Count = 0;
+      _start = 0;
+   }
+
    public Enumerator GetEnumerator() => new(this);
 
    public ref struct Enumerator
