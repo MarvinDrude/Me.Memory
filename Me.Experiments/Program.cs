@@ -1,5 +1,6 @@
 ﻿
 using Me.Memory.Buffers;
+using Me.Memory.Buffers.Spans;
 using Me.Memory.Collections;
 
 Console.WriteLine("Hello World!");
@@ -12,21 +13,31 @@ writer.WriteInterpolated($"{x} - {x}");
 
 Console.WriteLine(writer.ToString());
 
-SequenceArray<string> test = ["a", "b", "c"];
+var circ = new CircularBufferSlim<string>(new string[4]);
 
-foreach (ref var item in test)
+circ.Add("1");
+circ.Add("2");
+circ.Add("3");
+
+foreach (ref var item in circ)
 {
    Console.WriteLine(item);
 }
+Console.WriteLine("==");
 
-var test1 = new SequenceArray<string>(new string[] { "a", "b", "c", "d" });
+circ.Add("4");
+foreach (ref var item in circ)
+{
+   Console.WriteLine(item);
+}
+Console.WriteLine("==");
+circ.Add("5");
+circ.Add("6");
 
-Console.WriteLine(test == test1);
+foreach (ref var item in circ)
+{
+   Console.WriteLine(item);
+}
+Console.WriteLine("==");
 
-
-using var builder = new ArrayBuilder<string>();
-builder.Add("a");
-builder.Add("b");
-
-builder.Clear();
-Console.WriteLine(builder.Count);
+Console.WriteLine(circ.WrittenTwoSpan.Length);
