@@ -1,4 +1,5 @@
 ﻿<Solution>
   <Project Path="Me.Experiments\Me.Experiments.csproj" Type="Classic C#" />
+  <Project Path="Me.Memory.Tests\Me.Memory.Tests.csproj" Type="Classic C#" />
   <Project Path="Me.Memory\Me.Memory.csproj" Type="Classic C#" />
 </Solution>

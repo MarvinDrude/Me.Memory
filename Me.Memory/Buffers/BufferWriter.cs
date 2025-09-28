@@ -424,7 +424,7 @@ public ref partial struct BufferWriter<T> : IDisposable
       {
          var growBy = _memoryOwner.Length > 0 
             ? Math.Max(requestedSize, _memoryOwner.Length) : 256;
-         var newSizeLong = (long)_memoryOwner.Length + growBy;
+         var newSizeLong = (long)(Math.Max(_memoryOwner.Length, _initalSpanOwner.Length)) + growBy;
          
          newSize = (int)Math.Min(newSizeLong, int.MaxValue - 1);
       }
