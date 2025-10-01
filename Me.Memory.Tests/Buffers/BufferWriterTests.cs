@@ -1,6 +1,6 @@
 ﻿using Me.Memory.Buffers;
 
-namespace Me.Memory.Tests;
+namespace Me.Memory.Tests.Buffers;
 
 public class BufferWriterTests
 {
@@ -25,4 +25,6 @@ public class BufferWriterTests
       byte[] test = [1, 2, 3, 4, 5, 6, 7, 8, 9];
       await Assert.That(arr.SequenceEqual(test)).IsTrue();
    }
+   
+   
 }
