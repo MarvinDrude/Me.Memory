@@ -18,6 +18,7 @@ Mainly used by myself in most projects.
 ### StreamReaderSlim
 ### CircularBuffer
 ### CircularBufferSlim
+### ObjectPool
 ### TwoSpan
 ### SequenceArray
 ### Result
