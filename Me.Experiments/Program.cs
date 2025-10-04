@@ -2,43 +2,33 @@
 using Me.Memory.Buffers;
 using Me.Memory.Buffers.Spans;
 using Me.Memory.Collections;
+using Me.Memory.Pools;
 
-Console.WriteLine("Hello World!");
-var x = 20;
 
-var writer = new TextWriterIndentSlim(stackalloc char[256], stackalloc char[128]);
-writer.UpIndent();
-writer.UpIndent();
-writer.WriteInterpolated($"{x} - {x}");
-
-Console.WriteLine(writer.ToString());
-
-using var circ = new CircularBuffer<string>(4);
-
-circ.Add("1");
-circ.Add("2");
-circ.Add("3");
-
-foreach (ref var item in circ)
+var pool = new ObjectPool<Test>(new ObjectPoolOptions<Test>()
 {
-   Console.WriteLine(item);
-}
-Console.WriteLine("==");
+   FactoryFunc = static () =>
+   {
+      Console.WriteLine("CREATE");
+      return new Test()
+      {
+         Name = "Empty"
+      };
+   },
+   ReturnFunc = static (_) => true,
+   MaxSize = 10,
+   InitialSize = 5
+});
 
-circ.Add("4");
-foreach (ref var item in circ)
+Console.WriteLine("AAA");
+
+for (var i = 0; i < 10; i++)
 {
-   Console.WriteLine(item);
+   var tt = pool.Get();
+   pool.Return(tt);
 }
-Console.WriteLine("==");
-circ.Add("5");
-circ.Add("6");
 
-foreach (ref var item in circ)
+public class Test
 {
-   Console.WriteLine(item);
+   public string? Name { get; set; }
 }
-Console.WriteLine(circ[3]);
-Console.WriteLine("==");
-
-Console.WriteLine(circ.WrittenTwoSpan.Length);
