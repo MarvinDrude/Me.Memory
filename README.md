@@ -19,6 +19,8 @@ Mainly used by myself in most projects.
 ### CircularBuffer
 ### CircularBufferSlim
 ### ObjectPool
+### IoQueue
+### PinnedBlockMemoryPool
 ### TwoSpan
 ### SequenceArray
 ### Result
