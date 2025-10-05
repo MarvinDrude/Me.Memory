@@ -33,7 +33,7 @@ public sealed class ObjectPool<T>
       _currentSize = _queue.Count;
    }
    
-   public T Get()
+   public T Get(Func<T>? factoryFunc)
    {
       var candidate = _head;
       
@@ -43,7 +43,7 @@ public sealed class ObjectPool<T>
          if (!_queue.TryDequeue(out candidate))
          {
             // none left, create new one
-            return _factoryFunc();
+            return factoryFunc?.Invoke() ?? _factoryFunc();
          }
 
          // candidate got from dequeue
