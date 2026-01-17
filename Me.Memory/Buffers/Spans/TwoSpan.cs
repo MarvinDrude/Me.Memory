@@ -19,6 +19,9 @@ public readonly ref struct TwoSpan<T>
       }
    }
    
+   internal Span<T> First => _first;
+   internal Span<T> Second => _second;
+   
    private readonly Span<T> _first;
    private readonly Span<T> _second;
 

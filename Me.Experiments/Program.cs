@@ -3,32 +3,29 @@ using Me.Memory.Buffers;
 using Me.Memory.Buffers.Spans;
 using Me.Memory.Collections;
 using Me.Memory.Pools;
+using Me.Memory.Services;
+using Microsoft.Extensions.DependencyInjection;
 
+var coll = new ServiceCollection();
+coll.AddSingleton<A>();
+coll.AddSingleton<B>();
+var provider = coll.BuildServiceProvider();
 
-var pool = new ObjectPool<Test>(new ObjectPoolOptions<Test>()
+if (provider.TryGetServices<A, B>(out var a, out var b))
 {
-   FactoryFunc = static () =>
-   {
-      Console.WriteLine("CREATE");
-      return new Test()
-      {
-         Name = "Empty"
-      };
-   },
-   ReturnFunc = static (_) => true,
-   MaxSize = 10,
-   InitialSize = 5
-});
-
-Console.WriteLine("AAA");
-
-for (var i = 0; i < 10; i++)
-{
-   var tt = pool.Get();
-   pool.Return(tt);
+   Console.WriteLine(a.Name);
+   Console.WriteLine(b.Name);
 }
 
-public class Test
+Console.WriteLine("test");
+
+
+public class A
 {
-   public string? Name { get; set; }
+   public string Name => "a";
+}
+
+public class B
+{
+   public string Name => "b";
 }
