@@ -14,6 +14,7 @@ Mainly used by myself in most projects.
 ### BufferWriter
 ### ArrayBuilder
 ### TextWriterIndentSlim
+### CodeTextWriter
 ### StreamWriterSlim
 ### StreamReaderSlim
 ### CircularBuffer

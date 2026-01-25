@@ -1,6 +1,8 @@
 ﻿<Solution>
-  <Project Path="Me.Experiments\Me.Experiments.csproj" Type="Classic C#" />
-  <Project Path="Me.Memory.Benchmarks\Me.Memory.Benchmarks.csproj" Type="Classic C#" />
-  <Project Path="Me.Memory.Tests\Me.Memory.Tests.csproj" Type="Classic C#" />
-  <Project Path="Me.Memory\Me.Memory.csproj" Type="Classic C#" />
+  <Project Path="Me.Experiments\Me.Experiments.csproj" />
+  <Project Path="Me.Memory.Benchmarks\Me.Memory.Benchmarks.csproj" />
+  <Project Path="Me.Memory.Embedded.Generator/Me.Memory.Embedded.Generator.csproj" />
+  <Project Path="Me.Memory.Embedded.Packer/Me.Memory.Embedded.Packer.csproj" />
+  <Project Path="Me.Memory.Tests\Me.Memory.Tests.csproj" />
+  <Project Path="Me.Memory\Me.Memory.csproj" />
 </Solution>
