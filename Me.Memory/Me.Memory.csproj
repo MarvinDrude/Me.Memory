@@ -1,12 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
    <PropertyGroup>
-      <TargetFramework>net10.0</TargetFramework>
-      <ImplicitUsings>enable</ImplicitUsings>
-      <Nullable>enable</Nullable>
-      <LangVersion>Preview</LangVersion>
       <IsPackable>true</IsPackable>
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <RootNamespace>Me.Memory</RootNamespace>
    </PropertyGroup>
 
    <PropertyGroup>
@@ -32,7 +29,7 @@
    </ItemGroup>
 
    <ItemGroup>
-     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+     <PackageReference Include="Microsoft.SourceLink.GitHub">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
      </PackageReference>
