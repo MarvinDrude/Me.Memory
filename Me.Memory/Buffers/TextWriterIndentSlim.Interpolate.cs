@@ -10,11 +10,25 @@ public static class TextWriterIndentSlimInterpolatedStringHandlerExtensions
       [InterpolatedStringHandlerArgument(nameof(writer), nameof(provider))]
       scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
    { }
+
+   public static void WriteLineInterpolated(this ref TextWriterIndentSlim writer, IFormatProvider? provider,
+      [InterpolatedStringHandlerArgument(nameof(writer), nameof(provider))]
+      scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
+   {
+      writer.WriteLine();
+   }
    
    public static void WriteInterpolated(this ref TextWriterIndentSlim writer,
       [InterpolatedStringHandlerArgument(nameof(writer))]
       scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
    { }
+
+   public static void WriteLineInterpolated(this ref TextWriterIndentSlim writer,
+      [InterpolatedStringHandlerArgument(nameof(writer))]
+      scoped ref TextWriterIndentSlimInterpolatedStringHandler handler)
+   {
+      writer.WriteLine();
+   }
 }
 
 [InterpolatedStringHandler]
