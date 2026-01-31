@@ -6,18 +6,16 @@ using Me.Memory.Collections;
 using Me.Memory.Extensions;
 using Me.Memory.Pools;
 using Me.Memory.Services;
+using Me.Memory.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
-
-Console.WriteLine(A.GetStructLayoutString());
-
-[StructLayout(LayoutKind.Sequential)]
-struct A
+var result = new AsyncTimerResult();
+using (var timer = new AsyncTimer(result))
 {
-   public int B;
-   public long C;
-   public int D;
+   await Task.Delay(200);
 }
+
+Console.WriteLine("Hello World! " + result.Elapsed.TotalMilliseconds);
 
 // var coll = new ServiceCollection();
 // coll.AddSingleton<A>();
