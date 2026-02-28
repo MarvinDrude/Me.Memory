@@ -203,39 +203,34 @@ public ref partial struct BufferWriter<T> : IDisposable
    private void Resize(int requestedSize)
    {
       int newSize;
+      var currentLength = _isGrown ? _memoryOwner.Length : _initalSpanOwner.Length;
+      
       if (!_isGrown && _initialMinGrowCapacity >= requestedSize)
       {
-         var newSizeLong = (long)_initalSpanOwner.Length + _initialMinGrowCapacity;
-         newSize = (int)Math.Min(newSizeLong, int.MaxValue - 1);
+         newSize = currentLength + _initialMinGrowCapacity;
       }
       else
       {
-         var growBy = _memoryOwner.Length > 0 
-            ? Math.Max(requestedSize, _memoryOwner.Length) : 256;
-         var newSizeLong = (long)(Math.Max(_memoryOwner.Length, _initalSpanOwner.Length)) + growBy;
-         
-         newSize = (int)Math.Min(newSizeLong, int.MaxValue - 1);
+         var growBy = Math.Max(requestedSize, Math.Max(currentLength, 256));
+      
+         var newSizeLong = (long)currentLength + growBy;
+         newSize = (int)Math.Min(newSizeLong, (long)int.MaxValue - 1);
       }
       
-      if (!_isGrown)
+      var newOwner = new MemoryOwner<T>(newSize);
+      _span[.._position].CopyTo(newOwner.Span);
+
+      if (_isGrown)
       {
-         _memoryOwner = new MemoryOwner<T>(newSize);
-         WrittenSpan.CopyTo(_memoryOwner.Span);
-         
-         _initalSpanOwner.Dispose(); // does nothing usually
-         _initalSpanOwner = default;
-
-         _span = _memoryOwner.Span;
+         _memoryOwner.Dispose();
+      }
+      else
+      {
+         _initalSpanOwner.Dispose();
          _isGrown = true;
-         return;
       }
 
-      var oldOwner = _memoryOwner;
-      
-      _memoryOwner = new MemoryOwner<T>(newSize);
-      WrittenSpan.CopyTo(_memoryOwner.Span);
-
-      oldOwner.Dispose();
+      _memoryOwner = newOwner;
       _span = _memoryOwner.Span;
    }
 

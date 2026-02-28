@@ -154,4 +154,24 @@ public class BufferWriterTests
       
       await Assert.That(result[0]).IsEqualTo((byte)1);
    }
+
+   [Test]
+   public async Task BigInitialResize()
+   {
+      const int initialSize = 64;
+      const int largeWriteSize = 3000;
+      const int minGrow = 100;
+   
+      int finalCapacity;
+
+      {
+         Span<byte> span = stackalloc byte[initialSize];
+         using var writer = new BufferWriter<byte>(span, minGrow);
+
+         writer.AcquireSpan(largeWriteSize);
+         finalCapacity = writer.Capacity;
+      }
+
+      await Assert.That(finalCapacity).IsGreaterThanOrEqualTo(largeWriteSize);
+   }
 }
