@@ -2,7 +2,7 @@
 
 namespace Me.Memory.Tests.Buffers.Dynamic;
 
-public class PackedBoolsTests
+public class PackedBools8Tests
 {
    [Test]
    public async Task ConstructorInitializesRawByte()
@@ -11,7 +11,7 @@ public class PackedBoolsTests
 
       {
          // 0xAA = 1010 1010
-         var packed = new PackedBools(0xAA);
+         var packed = new PackedBools8(0xAA);
          result = packed.RawByte;
       }
 
@@ -28,7 +28,7 @@ public class PackedBoolsTests
 
       {
          // 0x81 = 1000 0001 (Bit 7 and Bit 0 are set)
-         var packed = new PackedBools(0x81);
+         var packed = new PackedBools8(0x81);
          
          bit0 = packed.Get(0);
          bit1 = packed.Get(1);
@@ -46,7 +46,7 @@ public class PackedBoolsTests
       byte result;
 
       {
-         var packed = new PackedBools(0); // 0000 0000
+         var packed = new PackedBools8(0); // 0000 0000
          
          // Set bit 2 -> 0000 0100 (4)
          packed.Set(2, true);
@@ -64,7 +64,7 @@ public class PackedBoolsTests
       byte result;
 
       {
-         var packed = new PackedBools(0xFF); // 1111 1111
+         var packed = new PackedBools8(0xFF); // 1111 1111
          
          // Clear bit 0 -> 1111 1110 (0xFE)
          packed.Set(0, false);
@@ -83,7 +83,7 @@ public class PackedBoolsTests
       byte finalByte;
 
       {
-         var packed = new PackedBools(0)
+         var packed = new PackedBools8(0)
          {
             // Use Indexer setter
             [3] = true // 0000 1000 (8)
@@ -106,7 +106,7 @@ public class PackedBoolsTests
       byte result;
 
       {
-         var packed = new PackedBools(0)
+         var packed = new PackedBools8(0)
          {
             [1] = true, // 3
             [0] = false // 2 (0000 0010)
@@ -124,19 +124,19 @@ public class PackedBoolsTests
    {
       await Assert.That(() =>
       {
-         var packed = new PackedBools(0);
+         var packed = new PackedBools8(0);
          packed.Get(8);
       }).Throws<ArgumentOutOfRangeException>();
 
       await Assert.That(() =>
       {
-         var packed = new PackedBools(0);
+         var packed = new PackedBools8(0);
          packed.Set(8, true);
       }).Throws<ArgumentOutOfRangeException>();
 
       await Assert.That(() =>
       {
-         var packed = new PackedBools(0);
+         var packed = new PackedBools8(0);
          var b = packed[8];
       }).Throws<ArgumentOutOfRangeException>();
    }
