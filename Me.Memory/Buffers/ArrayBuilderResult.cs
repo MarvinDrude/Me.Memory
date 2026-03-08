@@ -10,12 +10,12 @@ public readonly struct ArrayBuilderResult<T>(ArrayBuilder<T>? builder) : IDispos
    
    private readonly ArrayBuilder<T>? _builder = builder;
 
-   public ReadOnlySpan<T> WrittenSpan
+   public Span<T> WrittenSpan
    {
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       get =>
          _builder is null 
-            ? ReadOnlySpan<T>.Empty : _builder.WrittenSpan;
+            ? Span<T>.Empty : _builder.WrittenSpan;
    }
    
    [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -46,4 +46,24 @@ public ref struct SpanOwner<T> : IDisposable
       
       Length = 0;
    }
+
+   public static SpanOwner<T> CopyAndSort(scoped in ReadOnlySpan<T> source, IComparer<T>? comparer = null)
+   {
+      var owner = new SpanOwner<T>(source.Length);
+      
+      source.CopyTo(owner.Span);
+      owner.Span.Sort(comparer);
+      
+      return owner;
+   }
+
+   public static SpanOwner<T> CopyAndSort(scoped in ReadOnlySpan<T> source, scoped in Span<T> target, IComparer<T>? comparer = null)
+   {
+      var owner = new SpanOwner<T>(target);
+      
+      source.CopyTo(target);
+      target.Sort(comparer);
+      
+      return owner;
+   }
 }

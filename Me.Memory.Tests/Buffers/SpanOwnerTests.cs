@@ -90,4 +90,18 @@ public class SpanOwnerTests
 
       await Assert.That(lengthAfterDispose).IsEqualTo(0);
    }
+   
+   [Test]
+   public async Task SortSimple()
+   {
+      byte shouldBeFour;
+
+      {
+         ReadOnlySpan<byte> data = [1, 2, 5, 4, 5];
+         var owner = SpanOwner<byte>.CopyAndSort(data);
+         shouldBeFour = owner.Span[2];
+      }
+
+      await Assert.That(shouldBeFour).IsEqualTo((byte)4);
+   }
 }
