@@ -13,6 +13,7 @@ Mainly used by myself in most projects.
 ### ByteReader
 ### BufferWriter
 ### ArrayBuilder
+### ArrayBuilderResult
 ### TextWriterIndentSlim
 ### CodeTextWriter
 ### StreamWriterSlim
@@ -26,6 +27,11 @@ Mainly used by myself in most projects.
 ### SequenceArray
 ### Result
 ### WorkPool
-### PackedBools
+### PackedBools8
+### PackedBools16
+### PackedBools32
+### PackedBools64
+### Flags128
+### Flags256
 ### PooledList
 ### PooledSet
