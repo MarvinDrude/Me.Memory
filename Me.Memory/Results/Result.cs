@@ -9,6 +9,10 @@ public readonly struct Result<TSuccess, TError>
    [MemberNotNullWhen(true, nameof(Success))]
    [MemberNotNullWhen(false, nameof(Error))]
    public bool HasValue => IsSuccess;
+   
+   [MemberNotNullWhen(true, nameof(Error))]
+   [MemberNotNullWhen(false, nameof(Success))]
+   public bool Failed => !IsSuccess;
 
    public readonly TSuccess? Success;
    public readonly TError? Error;
