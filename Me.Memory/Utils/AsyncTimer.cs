@@ -7,21 +7,14 @@ namespace Me.Memory.Utils;
 /// ran in parallel / concurrent u can reuse one allocation of
 /// TimerResult
 /// </summary>
-public readonly struct AsyncTimer : IDisposable
+public readonly struct AsyncTimer(AsyncTimerResult result) : IDisposable
 {
-   private readonly long _startTicks;
-   private readonly AsyncTimerResult _result;
+   private readonly long _startTicks = Stopwatch.GetTimestamp();
+   private readonly AsyncTimerResult _result = result;
 
-   public AsyncTimer(AsyncTimerResult result)
-   {
-      _result = result;
-      _startTicks = Stopwatch.GetTimestamp();
-   }
-   
    public void Dispose()
    {
-      var delta = Stopwatch.GetTimestamp() - _startTicks;
-      _result.Elapsed = new TimeSpan(delta);
+      _result.Elapsed = Stopwatch.GetElapsedTime(_startTicks);
    }
 }
 

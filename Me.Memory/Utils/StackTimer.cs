@@ -37,14 +37,12 @@ public readonly ref struct StackTimer
 
    public void Dispose()
    {
-      var delta = GetTimestamp() - _startTicks;
-
       if (_isSpan)
       {
-         _resultSpan = new TimeSpan(delta);
+         _resultSpan = Stopwatch.GetElapsedTime(_startTicks);
          return;
       }
-      _resultTicks = delta;
+      _resultTicks = Stopwatch.GetElapsedTime(_startTicks).Ticks;
    }
 
    [MethodImpl(MethodImplOptions.AggressiveInlining)]

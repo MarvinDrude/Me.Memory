@@ -10,12 +10,27 @@ using Me.Memory.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 var result = new AsyncTimerResult();
-using (var timer = new AsyncTimer(result))
+using (new AsyncTimer(result))
 {
    await Task.Delay(200);
 }
 
+var time = TimeSpan.Zero;
+using (new StackTimer(ref time))
+{
+   Thread.Sleep(300);
+}
+
+var times = 0L;
+using (new StackTimer(ref times))
+{
+   Thread.Sleep(400);
+}
+
+
 Console.WriteLine("Hello World! " + result.Elapsed.TotalMilliseconds);
+Console.WriteLine("Hello World! " + time.TotalMilliseconds);
+Console.WriteLine("Hello World! " + new TimeSpan(times).TotalMilliseconds);
 
 // var coll = new ServiceCollection();
 // coll.AddSingleton<A>();
