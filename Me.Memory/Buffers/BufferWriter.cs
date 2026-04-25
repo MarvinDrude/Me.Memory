@@ -200,6 +200,13 @@ public ref partial struct BufferWriter<T> : IDisposable
       _position = movePosition ? newPosition : oldPosition;
    }
 
+   public MemoryOwner<T> GetMemoryOwner()
+   {
+      return !_isGrown 
+         ? throw new InvalidOperationException("BufferWriter is not grown") 
+         : _memoryOwner;
+   }
+   
    private void Resize(int requestedSize)
    {
       int newSize;
