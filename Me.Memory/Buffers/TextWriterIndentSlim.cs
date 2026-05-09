@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Me.Memory.Buffers;
@@ -36,6 +37,9 @@ public ref partial struct TextWriterIndentSlim : IDisposable
       get => _currentLevel;
    }
 
+   private static readonly SearchValues<char> HtmlSearchValues = 
+      SearchValues.Create(['<', '>', '&', '"', '\'']);
+   
    private BufferWriter<char> _indentCache;
    private ReadOnlySpan<char> _currentLevelBuffer;
    private int _currentLevel;
@@ -139,6 +143,51 @@ public ref partial struct TextWriterIndentSlim : IDisposable
                break;
             }
          }
+      }
+   }
+   
+   public void WriteHtmlEncoded(scoped ReadOnlySpan<char> text, bool multiLine = false)
+   {
+      if (text.IsEmpty) return;
+      
+      var firstIndex = text.IndexOfAny(HtmlSearchValues);
+      if (firstIndex == -1)
+      {
+         Write(text, multiLine);
+         return;
+      }
+      
+      AddIndentOnDemand();
+
+      var lastIndex = 0;
+      for (var i = 0; i < text.Length; i++)
+      {
+         var c = text[i];
+         ReadOnlySpan<char> entity = c switch
+         {
+            '<' => "&lt;",
+            '>' => "&gt;",
+            '&' => "&amp;",
+            '"' => "&quot;",
+            '\'' => "&apos;",
+            _ => []
+         };
+
+         if (entity.IsEmpty) continue;
+         
+         // Flush preceding plain text
+         if (i > lastIndex)
+         {
+            _buffer.Write(text[lastIndex..i]);
+         }
+
+         _buffer.Write(entity);
+         lastIndex = i + 1;
+      }
+
+      if (lastIndex < text.Length)
+      {
+         _buffer.Write(text[lastIndex..]);
       }
    }
 
