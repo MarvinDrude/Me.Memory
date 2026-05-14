@@ -38,7 +38,12 @@ public ref partial struct TextWriterIndentSlim : IDisposable
    }
 
    private static readonly SearchValues<char> HtmlSearchValues = 
-      SearchValues.Create(['<', '>', '&', '"', '\'']);
+      SearchValues.Create('<', '>', '&', '"', '\'');
+   private static readonly SearchValues<char> HtmlSearchValuesNoApostrophe = 
+      SearchValues.Create('<', '>', '&', '"');
+   
+   private static readonly SearchValues<char> UrlSearchValues = 
+      SearchValues.Create(' ', '"', '\'', '<', '>', '(', ')', '[', ']', '\\');
    
    private BufferWriter<char> _indentCache;
    private ReadOnlySpan<char> _currentLevelBuffer;
@@ -146,11 +151,13 @@ public ref partial struct TextWriterIndentSlim : IDisposable
       }
    }
    
-   public void WriteHtmlEncoded(scoped ReadOnlySpan<char> text, bool multiLine = false)
+   public void WriteHtmlEncoded(scoped ReadOnlySpan<char> text, 
+      bool multiLine = false, bool encodeApostrophe = true)
    {
       if (text.IsEmpty) return;
       
-      var firstIndex = text.IndexOfAny(HtmlSearchValues);
+      var firstIndex = text.IndexOfAny(encodeApostrophe
+         ? HtmlSearchValues : HtmlSearchValuesNoApostrophe);
       if (firstIndex == -1)
       {
          Write(text, multiLine);
@@ -169,7 +176,7 @@ public ref partial struct TextWriterIndentSlim : IDisposable
             '>' => "&gt;",
             '&' => "&amp;",
             '"' => "&quot;",
-            '\'' => "&apos;",
+            '\'' when encodeApostrophe => "&#39;",
             _ => []
          };
 
@@ -182,6 +189,59 @@ public ref partial struct TextWriterIndentSlim : IDisposable
          }
 
          _buffer.Write(entity);
+         lastIndex = i + 1;
+      }
+
+      if (lastIndex < text.Length)
+      {
+         _buffer.Write(text[lastIndex..]);
+      }
+   }
+   
+   /// <summary>
+   /// Not the full RFC 3986 but only the markdown control characters
+   /// </summary>
+   public void WriteMarkdownUrlEncoded(
+      scoped ReadOnlySpan<char> text, bool multiLine = false)
+   {
+      if (text.IsEmpty) return;
+   
+      var firstIndex = text.IndexOfAny(UrlSearchValues);
+      if (firstIndex == -1)
+      {
+         Write(text, multiLine);
+         return;
+      }
+   
+      var lastIndex = 0;
+   
+      for (var i = firstIndex; i < text.Length; i++)
+      {
+         var c = text[i];
+         ReadOnlySpan<char> encoded = c switch
+         {
+            ' '  => "%20",
+            '"'  => "%22",
+            '\'' => "%27",
+            '<'  => "%3C",
+            '>'  => "%3E",
+            '('  => "%28",
+            ')'  => "%29",
+            '['  => "%5B",
+            ']'  => "%5D",
+            '\\' => "%5C",
+            _    => []
+         };
+
+         if (encoded.IsEmpty) continue;
+      
+         // Flush preceding plain text
+         if (i > lastIndex)
+         {
+            _buffer.Write(text[lastIndex..i]);
+         }
+
+         _buffer.Write(encoded);
          lastIndex = i + 1;
       }
 

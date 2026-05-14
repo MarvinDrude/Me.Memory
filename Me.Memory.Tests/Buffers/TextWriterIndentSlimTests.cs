@@ -9,7 +9,7 @@ public sealed class TextWriterIndentSlimTests
    {
       string result;
       const string input = "<tag attribute='val' & \"quote\">";
-      const string expected = "&lt;tag attribute=&apos;val&apos; &amp; &quot;quote&quot;&gt;";
+      const string expected = "&lt;tag attribute=&#39;val&#39; &amp; &quot;quote&quot;&gt;";
 
       {
          using var writer = new TextWriterIndentSlim(
@@ -125,6 +125,82 @@ public sealed class TextWriterIndentSlimTests
       }
 
       await Assert.That(result.Length).IsEqualTo(expected.Length);
+      await Assert.That(result).IsEqualTo(expected);
+   }
+   
+   [Test]
+   public async Task WriteMarkdownUrlEncoded_ProperlyEscapesAllTargetCharacters()
+   {
+      string result;
+      const string input = " \"'<>()[]\\ ";
+      const string expected = "%20%22%27%3C%3E%28%29%5B%5D%5C%20";
+
+      {
+         using var writer = new TextWriterIndentSlim(
+            stackalloc char[128], 
+            stackalloc char[32]);
+
+         writer.WriteMarkdownUrlEncoded(input.AsSpan());
+         result = writer.ToString();
+      }
+
+      await Assert.That(result).IsEqualTo(expected);
+   }
+
+   [Test]
+   public async Task WriteMarkdownUrlEncoded_LeavesSafeCharactersUntouched()
+   {
+      string result;
+      const string input = "https://example.com/path?query=1,2,3";
+      const string expected = "https://example.com/path?query=1,2,3";
+
+      {
+         using var writer = new TextWriterIndentSlim(
+            stackalloc char[128], 
+            stackalloc char[32]);
+
+         writer.WriteMarkdownUrlEncoded(input.AsSpan());
+         result = writer.ToString();
+      }
+
+      await Assert.That(result).IsEqualTo(expected);
+   }
+
+   [Test]
+   public async Task WriteMarkdownUrlEncoded_HandlesMixedContentProperly()
+   {
+      string result;
+      const string input = "Hello [World] (test) <link> \"quote\" 'apos' \\slash";
+      const string expected = "Hello%20%5BWorld%5D%20%28test%29%20%3Clink%3E%20%22quote%22%20%27apos%27%20%5Cslash";
+
+      {
+         using var writer = new TextWriterIndentSlim(
+            stackalloc char[128], 
+            stackalloc char[32]);
+
+         writer.WriteMarkdownUrlEncoded(input.AsSpan());
+         result = writer.ToString();
+      }
+
+      await Assert.That(result).IsEqualTo(expected);
+   }
+
+   [Test]
+   public async Task WriteMarkdownUrlEncoded_HandlesEmptyString()
+   {
+      string result;
+      const string input = "";
+      const string expected = "";
+
+      {
+         using var writer = new TextWriterIndentSlim(
+            stackalloc char[128], 
+            stackalloc char[32]);
+
+         writer.WriteMarkdownUrlEncoded(input.AsSpan());
+         result = writer.ToString();
+      }
+
       await Assert.That(result).IsEqualTo(expected);
    }
 }
