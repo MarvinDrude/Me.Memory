@@ -184,6 +184,25 @@ public sealed class TextWriterIndentSlimTests
 
       await Assert.That(result).IsEqualTo(expected);
    }
+   
+   [Test]
+   public async Task WriteEncodedEscaped()
+   {
+      string result;
+      const string input = "Hello\\ \\[World\\]\\ \\(test\\)";
+      const string expected = "Hello%5C%20[World]%5C%20(test)";
+
+      {
+         using var writer = new TextWriterIndentSlim(
+            stackalloc char[128], 
+            stackalloc char[32]);
+
+         writer.WriteMarkdownUrlEncoded(input.AsSpan());
+         result = writer.ToString();
+      }
+
+      await Assert.That(result).IsEqualTo(expected);
+   }
 
    [Test]
    public async Task WriteMarkdownUrlEncoded_HandlesEmptyString()

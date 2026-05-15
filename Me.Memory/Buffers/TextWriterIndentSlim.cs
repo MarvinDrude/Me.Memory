@@ -218,6 +218,25 @@ public ref partial struct TextWriterIndentSlim : IDisposable
       for (var i = firstIndex; i < text.Length; i++)
       {
          var c = text[i];
+         if (c == '\\' && i + 1 < text.Length)
+         {
+            var next = text[i + 1];
+            if (IsEscapable(next)) 
+            {
+               if (i > lastIndex)
+               {
+                  _buffer.Write(text[lastIndex..i]);
+               }
+            
+               _buffer.Write(text.Slice(i + 1, 1));
+            
+               i++; 
+               lastIndex = i + 1;
+               
+               continue;
+            }
+         }
+         
          ReadOnlySpan<char> encoded = c switch
          {
             ' '  => "%20",
@@ -329,5 +348,17 @@ public ref partial struct TextWriterIndentSlim : IDisposable
    {
       _buffer.Dispose();
       _indentCache.Dispose();
+   }
+   
+   private static bool IsEscapable(char c)
+   {
+      return c switch
+      {
+         '\\' or '`' or '*' or '_' or '{' or '}' or '[' or ']' or
+            '(' or ')' or '#' or '+' or '-' or '.' or '!' or '>' or
+            '"' or '\'' or '$' or '%' or '&' or ',' or '/' or ':' or
+            ';' or '<' or '=' or '?' or '@' or '^' or '|' or '~' => true,
+         _ => false
+      };
    }
 }
