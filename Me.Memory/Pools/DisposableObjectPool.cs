@@ -1,4 +1,4 @@
-﻿namespace Me.Memory.Pools;
+namespace Me.Memory.Pools;
 
 public sealed class DisposableObjectPool<T>(ObjectPoolOptions<T> options)
    : ObjectPool<T>(options), IDisposable
@@ -28,6 +28,7 @@ public sealed class DisposableObjectPool<T>(ObjectPoolOptions<T> options)
    
    public void Dispose()
    {
+      if (_isDisposed) return;
       _isDisposed = true;
 
       DisposeEntry(_head);

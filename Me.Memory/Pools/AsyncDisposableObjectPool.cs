@@ -27,9 +27,12 @@ public sealed class AsyncDisposableObjectPool<T>(ObjectPoolOptions<T> options)
 
    public ValueTask<bool> ReturnAsync(T item)
    {
-      return !Return(item) || _isDisposed
-         ? Awaited(item) 
-         : new ValueTask<bool>(true);
+      if (_isDisposed || !base.Return(item))
+      {
+         return Awaited(item);
+      }
+
+      return new ValueTask<bool>(true);
 
       static async ValueTask<bool> Awaited(T inner)
       {
