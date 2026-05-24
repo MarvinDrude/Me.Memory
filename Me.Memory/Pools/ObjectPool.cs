@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 namespace Me.Memory.Pools;
 
-public sealed class ObjectPool<T>
+public class ObjectPool<T>
    where T : class
 {
    private readonly Func<T> _factoryFunc;
@@ -12,9 +12,9 @@ public sealed class ObjectPool<T>
    private readonly int _initialSize;
 
    private int _currentSize;
-   private readonly ConcurrentQueue<T> _queue = [];
+   protected readonly ConcurrentQueue<T> _queue = [];
 
-   private T? _head;
+   protected T? _head;
 
    public ObjectPool(ObjectPoolOptions<T> options)
    {
@@ -33,7 +33,7 @@ public sealed class ObjectPool<T>
       _currentSize = _queue.Count;
    }
    
-   public T Get(Func<T>? factoryFunc)
+   public virtual T Get(Func<T>? factoryFunc)
    {
       var candidate = _head;
       
@@ -53,7 +53,7 @@ public sealed class ObjectPool<T>
       return candidate;
    }
 
-   public bool Return(T item)
+   public virtual bool Return(T item)
    {
       if (!_returnFunc(item))
       {
