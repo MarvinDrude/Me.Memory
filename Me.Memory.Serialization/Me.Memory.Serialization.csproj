@@ -31,6 +31,9 @@
 
    <ItemGroup>
       <ProjectReference Include="..\Me.Memory\Me.Memory.csproj" />
+      <ProjectReference Include="..\Me.Memory.Serialization.Generator\Me.Memory.Serialization.Generator.csproj"
+                        OutputItemType="Analyzer"
+                        ReferenceOutputAssembly="false" />
    </ItemGroup>
 
    <ItemGroup>
