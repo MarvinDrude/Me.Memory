@@ -19,6 +19,11 @@ public delegate int CalculateByteLengthDelegate<T>(scoped in T value)
 public static class SerializerRegistry<T>
    where T : allows ref struct
 {
+   static SerializerRegistry()
+   {
+      SerializerRegistryResolver.RegisterIfGenericOrSpecial<T>();
+   }
+
    /// <summary>
    /// The cached static write delegate for type <typeparamref name="T"/>.
    /// </summary>

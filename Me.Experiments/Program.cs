@@ -12,6 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 Console.WriteLine("Hello World!");
 
 var bytes = MeSerializer.SerializeWithoutPrecalculation((uint?)200, 256);
-var deserialized = MeSerializer.Deserialize<int>(bytes);
+var deserialized = MeSerializer.Deserialize<uint>(bytes);
 
 Console.WriteLine(deserialized);

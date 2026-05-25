@@ -1,6 +1,8 @@
 #pragma warning disable CS8600, CS8619
 
 using System.Buffers;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Text;
 using Me.Memory.Buffers;
@@ -142,6 +144,20 @@ public class SystemSerializerTests
        await Assert.That(SerializerRegistry<Guid>.Write).IsNotNull();
        await Assert.That(SerializerRegistry<DateTime>.Write).IsNotNull();
        await Assert.That(SerializerRegistry<Uri>.Write).IsNotNull();
+
+       // Dynamically resolved nullables and generics
+       await Assert.That(SerializerRegistry<int?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<int?>.TryRead).IsNotNull();
+       await Assert.That(SerializerRegistry<int?>.CalculateByteLength).IsNotNull();
+
+       await Assert.That(SerializerRegistry<List<int>?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<List<int>?>.TryRead).IsNotNull();
+       await Assert.That(SerializerRegistry<List<int>?>.CalculateByteLength).IsNotNull();
+
+       await Assert.That(SerializerRegistry<string[]?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<Dictionary<string, int>?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<ConcurrentQueue<double>?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<ImmutableList<Guid>?>.Write).IsNotNull();
     }
 
     [Test]
