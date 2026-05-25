@@ -1,17 +1,36 @@
-using Me.Memory.Serialization.Interfaces;
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using Me.Memory.Buffers;
 
 namespace Me.Memory.Serialization;
 
+public delegate int WriteDelegate<T>(ref BufferWriter<byte> writer, scoped in T value)
+   where T : allows ref struct;
+
+public delegate bool TryReadDelegate<T>(ref SequenceReader<byte> reader, [MaybeNullWhen(false)] out T value)
+   where T : allows ref struct;
+
+public delegate int CalculateByteLengthDelegate<T>(scoped in T value)
+   where T : allows ref struct;
+
 /// <summary>
-/// A zero-overhead, reflection-free static registry for serializers.
+/// A zero-overhead, reflection-free static registry for serializers using delegate caching.
 /// </summary>
-/// <typeparam name="T">The type of the values being serialized.</typeparam>
 public static class SerializerRegistry<T>
    where T : allows ref struct
 {
    /// <summary>
-   /// Gets or sets the static serializer instance for type <typeparamref name="T"/>.
-   /// Access is resolved by the JIT compiler as a direct pointer read, yielding maximum performance.
+   /// The cached static write delegate for type <typeparamref name="T"/>.
    /// </summary>
-   public static IInstanceSerializer<T>? Instance { get; set; }
+   public static WriteDelegate<T>? Write { get; set; }
+
+   /// <summary>
+   /// The cached static read delegate for type <typeparamref name="T"/>.
+   /// </summary>
+   public static TryReadDelegate<T>? TryRead { get; set; }
+
+   /// <summary>
+   /// The cached static length calculation delegate for type <typeparamref name="T"/>.
+   /// </summary>
+   public static CalculateByteLengthDelegate<T>? CalculateByteLength { get; set; }
 }

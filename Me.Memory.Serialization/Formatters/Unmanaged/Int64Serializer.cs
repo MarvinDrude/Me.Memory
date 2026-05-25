@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for 64-bit signed integers.
 /// </summary>
-public sealed class Int64Serializer : ISerializer<long>
+public abstract class Int64Serializer : ISerializer<long>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in long value)
    {

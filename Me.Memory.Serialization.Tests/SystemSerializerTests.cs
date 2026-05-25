@@ -130,11 +130,14 @@ public class SystemSerializerTests
     [Test]
     public async Task TestSerializerRegistry()
     {
-       await Assert.That(SerializerRegistry<int>.Instance).IsNotNull();
-       await Assert.That(SerializerRegistry<bool>.Instance).IsNotNull();
-       await Assert.That(SerializerRegistry<string?>.Instance).IsNotNull();
-       await Assert.That(SerializerRegistry<Guid>.Instance).IsNotNull();
-       await Assert.That(SerializerRegistry<DateTime>.Instance).IsNotNull();
-       await Assert.That(SerializerRegistry<Uri>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<int>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<int>.TryRead).IsNotNull();
+       await Assert.That(SerializerRegistry<int>.CalculateByteLength).IsNotNull();
+
+       await Assert.That(SerializerRegistry<bool>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<string?>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<Guid>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<DateTime>.Write).IsNotNull();
+       await Assert.That(SerializerRegistry<Uri>.Write).IsNotNull();
     }
 }

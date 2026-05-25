@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for 32-bit unsigned integers.
 /// </summary>
-public sealed class UInt32Serializer : ISerializer<uint>
+public abstract class UInt32Serializer : ISerializer<uint>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in uint value)
    {

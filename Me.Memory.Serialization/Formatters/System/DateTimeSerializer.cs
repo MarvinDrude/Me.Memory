@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for DateTime values.
 /// </summary>
-public sealed class DateTimeSerializer : ISerializer<DateTime>
+public abstract class DateTimeSerializer : ISerializer<DateTime>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in DateTime value)
    {

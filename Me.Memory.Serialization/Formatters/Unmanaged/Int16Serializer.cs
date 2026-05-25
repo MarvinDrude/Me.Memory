@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for 16-bit signed integers.
 /// </summary>
-public sealed class Int16Serializer : ISerializer<short>
+public abstract class Int16Serializer : ISerializer<short>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in short value)
    {

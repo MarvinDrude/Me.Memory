@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for single-precision floating point numbers.
 /// </summary>
-public sealed class SingleSerializer : ISerializer<float>
+public abstract class SingleSerializer : ISerializer<float>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in float value)
    {

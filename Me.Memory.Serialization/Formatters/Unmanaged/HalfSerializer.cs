@@ -10,7 +10,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for half-precision floating point numbers.
 /// </summary>
-public sealed class HalfSerializer : ISerializer<Half>
+public abstract class HalfSerializer : ISerializer<Half>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in Half value)
    {

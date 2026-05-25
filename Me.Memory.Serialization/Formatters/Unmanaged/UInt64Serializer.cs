@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for 64-bit unsigned integers.
 /// </summary>
-public sealed class UInt64Serializer : ISerializer<ulong>
+public abstract class UInt64Serializer : ISerializer<ulong>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in ulong value)
    {

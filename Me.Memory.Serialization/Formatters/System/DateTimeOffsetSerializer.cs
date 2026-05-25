@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for DateTimeOffset values.
 /// </summary>
-public sealed class DateTimeOffsetSerializer : ISerializer<DateTimeOffset>
+public abstract class DateTimeOffsetSerializer : ISerializer<DateTimeOffset>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in DateTimeOffset value)
    {

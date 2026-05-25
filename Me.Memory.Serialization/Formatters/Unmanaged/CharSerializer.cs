@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for characters.
 /// </summary>
-public sealed class CharSerializer : ISerializer<char>
+public abstract class CharSerializer : ISerializer<char>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in char value)
    {

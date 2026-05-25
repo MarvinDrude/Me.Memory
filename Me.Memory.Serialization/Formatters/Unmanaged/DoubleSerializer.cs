@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for double-precision floating point numbers.
 /// </summary>
-public sealed class DoubleSerializer : ISerializer<double>
+public abstract class DoubleSerializer : ISerializer<double>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in double value)
    {

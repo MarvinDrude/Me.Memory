@@ -7,7 +7,7 @@ using Me.Memory.Serialization.Interfaces;
 
 namespace Me.Memory.Serialization.Formatters.System;
 
-public sealed class StringSerializer : ISerializer<string?>
+public abstract class StringSerializer : ISerializer<string?>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in string? value)
    {

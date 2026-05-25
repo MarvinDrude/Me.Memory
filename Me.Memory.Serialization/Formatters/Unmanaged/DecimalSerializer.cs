@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for decimal numbers.
 /// </summary>
-public sealed class DecimalSerializer : ISerializer<decimal>
+public abstract class DecimalSerializer : ISerializer<decimal>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in decimal value)
    {

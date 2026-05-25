@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for 16-bit unsigned integers.
 /// </summary>
-public sealed class UInt16Serializer : ISerializer<ushort>
+public abstract class UInt16Serializer : ISerializer<ushort>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in ushort value)
    {

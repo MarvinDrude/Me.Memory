@@ -8,7 +8,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for booleans.
 /// </summary>
-public sealed class BooleanSerializer : ISerializer<bool>
+public abstract class BooleanSerializer : ISerializer<bool>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in bool value)
    {

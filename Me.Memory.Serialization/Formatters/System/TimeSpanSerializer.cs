@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for TimeSpan values.
 /// </summary>
-public sealed class TimeSpanSerializer : ISerializer<TimeSpan>
+public abstract class TimeSpanSerializer : ISerializer<TimeSpan>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in TimeSpan value)
    {

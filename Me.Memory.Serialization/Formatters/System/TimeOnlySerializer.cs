@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for TimeOnly values.
 /// </summary>
-public sealed class TimeOnlySerializer : ISerializer<TimeOnly>
+public abstract class TimeOnlySerializer : ISerializer<TimeOnly>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in TimeOnly value)
    {

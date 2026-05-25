@@ -8,7 +8,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for signed bytes.
 /// </summary>
-public sealed class SByteSerializer : ISerializer<sbyte>
+public abstract class SByteSerializer : ISerializer<sbyte>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in sbyte value)
    {

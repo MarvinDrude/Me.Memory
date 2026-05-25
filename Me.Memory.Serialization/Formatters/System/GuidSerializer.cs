@@ -7,7 +7,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for Guid values.
 /// </summary>
-public sealed class GuidSerializer : ISerializer<Guid>
+public abstract class GuidSerializer : ISerializer<Guid>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in Guid value)
    {

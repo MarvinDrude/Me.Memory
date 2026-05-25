@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for DateOnly values.
 /// </summary>
-public sealed class DateOnlySerializer : ISerializer<DateOnly>
+public abstract class DateOnlySerializer : ISerializer<DateOnly>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in DateOnly value)
    {

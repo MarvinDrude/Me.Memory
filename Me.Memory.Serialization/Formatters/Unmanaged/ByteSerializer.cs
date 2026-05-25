@@ -8,7 +8,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// <summary>
 /// Serializer for bytes.
 /// </summary>
-public sealed class ByteSerializer : ISerializer<byte>
+public abstract class ByteSerializer : ISerializer<byte>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in byte value)
    {

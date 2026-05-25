@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// <summary>
 /// Serializer for Uri values.
 /// </summary>
-public sealed class UriSerializer : ISerializer<Uri>
+public abstract class UriSerializer : ISerializer<Uri>
 {
    public static int Write(ref BufferWriter<byte> writer, scoped in Uri value)
    {
