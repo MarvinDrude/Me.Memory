@@ -26,6 +26,7 @@ public sealed partial class SerializerGenerator
       var sortedProperties = CollectPositionedProperties(typeSymbol);
       var unions = CollectUnions(typeSymbol);
 
+      // Find duplicate types in properties to cache their delegates
       var typeCounts = new Dictionary<string, int>();
       foreach (var prop in sortedProperties)
       {
@@ -39,7 +40,7 @@ public sealed partial class SerializerGenerator
          .ToList();
 
       var duplicateTypeVarNames = new Dictionary<string, string>();
-      for (int i = 0; i < duplicateTypes.Count; i++)
+      for (var i = 0; i < duplicateTypes.Count; i++)
       {
          duplicateTypeVarNames[duplicateTypes[i]] = $"delegate_{i}";
       }
@@ -64,514 +65,21 @@ public sealed partial class SerializerGenerator
             writer.WriteNamespace(ns);
          }
 
-         writer.WriteText($"public abstract class {typeName}Serializer : ISerializer<{typeNameWithNullability}>");
-         writer.WriteLine();
+         writer.WriteLineInterpolated($"public abstract class {typeName}Serializer : ISerializer<{typeNameWithNullability}>");
          writer.OpenBody();
 
          // Write Method
-         writer.WriteText(
-            $"public static int Write(ref BufferWriter<byte> writer, scoped in {typeNameWithNullability} value)");
-         writer.WriteLine();
-         writer.OpenBody();
-
-         foreach (var dupType in duplicateTypes)
-         {
-            var varName = duplicateTypeVarNames[dupType];
-            writer.WriteText($"var write_{varName} = SerializerRegistry<{dupType}>.GetWrite();");
-            writer.WriteLine();
-         }
-
-         if (isReferenceType)
-         {
-            if (unions.Count > 0)
-            {
-               // Polymorphic Reference Type
-               writer.WriteText("if (value is null)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("var span = writer.AcquireSpan(sizeof(int));");
-               writer.WriteLine();
-               writer.WriteText("BinaryPrimitives.WriteInt32LittleEndian(span, -1);");
-               writer.WriteLine();
-               writer.WriteText("return sizeof(int);");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               foreach (var union in unions)
-               {
-                  var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                  writer.WriteText($"if (value is {unionTypeName} derived_{union.Tag})");
-                  writer.WriteLine();
-                  writer.OpenBody();
-                  writer.WriteText("var span = writer.AcquireSpan(sizeof(int));");
-                  writer.WriteLine();
-                  writer.WriteText($"BinaryPrimitives.WriteInt32LittleEndian(span, {union.Tag});");
-                  writer.WriteLine();
-                  writer.WriteText(
-                     $"return sizeof(int) + SerializerRegistry<{unionTypeName}?>.GetWrite()(ref writer, derived_{union.Tag});");
-                  writer.WriteLine();
-                  writer.CloseBody();
-                  writer.WriteLine();
-               }
-
-               if (!isAbstract)
-               {
-                  writer.WriteText("var baseSpan = writer.AcquireSpan(sizeof(int));");
-                  writer.WriteLine();
-                  writer.WriteText("BinaryPrimitives.WriteInt32LittleEndian(baseSpan, 0);");
-                  writer.WriteLine();
-                  writer.WriteText("var written = sizeof(int);");
-                  writer.WriteLine();
-                  foreach (var prop in sortedProperties)
-                  {
-                     var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                     if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                     {
-                        writer.WriteText($"written += write_{varName}(ref writer, value.{prop.Name});");
-                     }
-                     else
-                     {
-                        writer.WriteText(
-                           $"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
-                     }
-
-                     writer.WriteLine();
-                  }
-
-                  writer.WriteText("return written;");
-                  writer.WriteLine();
-               }
-               else
-               {
-                  writer.WriteText(
-                     "throw new InvalidOperationException(\"Cannot serialize abstract base type directly.\");");
-                  writer.WriteLine();
-               }
-            }
-            else
-            {
-               // Simple Reference Type
-               writer.WriteText("if (value is null)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("var span = writer.AcquireSpan(sizeof(bool));");
-               writer.WriteLine();
-               writer.WriteText("span[0] = 0;");
-               writer.WriteLine();
-               writer.WriteText("return sizeof(bool);");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               writer.WriteText("var presenceSpan = writer.AcquireSpan(sizeof(bool));");
-               writer.WriteLine();
-               writer.WriteText("presenceSpan[0] = 1;");
-               writer.WriteLine();
-               writer.WriteText("var written = sizeof(bool);");
-               writer.WriteLine();
-               foreach (var prop in sortedProperties)
-               {
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                  {
-                     writer.WriteText($"written += write_{varName}(ref writer, value.{prop.Name});");
-                  }
-                  else
-                  {
-                     writer.WriteText(
-                        $"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
-                  }
-
-                  writer.WriteLine();
-               }
-
-               writer.WriteText("return written;");
-               writer.WriteLine();
-            }
-         }
-         else
-         {
-            // Struct / Value Type
-            writer.WriteText("var written = 0;");
-            writer.WriteLine();
-            foreach (var prop in sortedProperties)
-            {
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-               {
-                  writer.WriteText($"written += write_{varName}(ref writer, value.{prop.Name});");
-               }
-               else
-               {
-                  writer.WriteText(
-                     $"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
-               }
-
-               writer.WriteLine();
-            }
-
-            writer.WriteText("return written;");
-            writer.WriteLine();
-         }
-
-         writer.CloseBody(); // close Write method
+         RenderWriteMethod(ref writer, typeNameWithNullability, isReferenceType, isAbstract, sortedProperties, unions, duplicateTypes, duplicateTypeVarNames);
          writer.WriteLine();
 
          // TryRead Method
-         writer.WriteText(
-            $"public static bool TryRead(ref SequenceReader<byte> reader, [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out {typeNameWithNullability} value)");
-         writer.WriteLine();
-         writer.OpenBody();
-
-         foreach (var dupType in duplicateTypes)
-         {
-            var varName = duplicateTypeVarNames[dupType];
-            writer.WriteText($"var tryRead_{varName} = SerializerRegistry<{dupType}>.GetTryRead();");
-            writer.WriteLine();
-         }
-
-         if (isReferenceType)
-         {
-            if (unions.Count > 0)
-            {
-               // Polymorphic Reference Type
-               writer.WriteText("if (!reader.TryReadLittleEndian(out int tag))");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("value = null;");
-               writer.WriteLine();
-               writer.WriteText("return false;");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               writer.WriteText("if (tag == -1)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("value = null;");
-               writer.WriteLine();
-               writer.WriteText("return true;");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               foreach (var union in unions)
-               {
-                  var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                  writer.WriteText($"if (tag == {union.Tag})");
-                  writer.WriteLine();
-                  writer.OpenBody();
-                  writer.WriteText(
-                     $"var success = SerializerRegistry<{unionTypeName}?>.GetTryRead()(ref reader, out var derived);");
-                  writer.WriteLine();
-                  writer.WriteText("value = derived;");
-                  writer.WriteLine();
-                  writer.WriteText("return success;");
-                  writer.WriteLine();
-                  writer.CloseBody();
-                  writer.WriteLine();
-               }
-
-               if (!isAbstract)
-               {
-                  writer.WriteText("if (tag == 0)");
-                  writer.WriteLine();
-                  writer.OpenBody();
-                  for (int i = 0; i < sortedProperties.Count; i++)
-                  {
-                     var prop = sortedProperties[i];
-                     var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                     if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                     {
-                        writer.WriteText($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
-                     }
-                     else
-                     {
-                        writer.WriteText(
-                           $"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
-                     }
-
-                     writer.WriteLine();
-                     writer.OpenBody();
-                     writer.WriteText("value = null;");
-                     writer.WriteLine();
-                     writer.WriteText("return false;");
-                     writer.WriteLine();
-                     writer.CloseBody();
-                     writer.WriteLine();
-                  }
-
-                  writer.WriteText($"value = new {fullyQualifiedName}");
-                  writer.WriteLine();
-                  writer.OpenBody();
-
-                  for (var i = 0; i < sortedProperties.Count; i++)
-                  {
-                     var prop = sortedProperties[i];
-                     writer.WriteText($"{prop.Name} = prop_{i},");
-                     writer.WriteLine();
-                  }
-
-                  writer.CloseBody(); // close object initializer
-                  writer.WriteText(";");
-                  writer.WriteLine();
-                  writer.WriteText("return true;");
-                  writer.WriteLine();
-                  writer.CloseBody();
-                  writer.WriteLine();
-               }
-
-               writer.WriteText("throw new InvalidOperationException($\"Unknown polymorphic tag {tag}.\");");
-               writer.WriteLine();
-            }
-            else
-            {
-               // Simple Reference Type
-               writer.WriteText("if (reader.Remaining < sizeof(bool))");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("value = null;");
-               writer.WriteLine();
-               writer.WriteText("return false;");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               writer.WriteText("var hasValue = reader.UnreadSpan[0] != 0;");
-               writer.WriteLine();
-               writer.WriteText("reader.Advance(sizeof(bool));");
-               writer.WriteLine();
-
-               writer.WriteText("if (!hasValue)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("value = null;");
-               writer.WriteLine();
-               writer.WriteText("return true;");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               for (var i = 0; i < sortedProperties.Count; i++)
-               {
-                  var prop = sortedProperties[i];
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                  {
-                     writer.WriteText($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
-                  }
-                  else
-                  {
-                     writer.WriteText(
-                        $"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
-                  }
-
-                  writer.WriteLine();
-                  writer.OpenBody();
-                  writer.WriteText("value = null;");
-                  writer.WriteLine();
-                  writer.WriteText("return false;");
-                  writer.WriteLine();
-                  writer.CloseBody();
-                  writer.WriteLine();
-               }
-
-               writer.WriteText($"value = new {fullyQualifiedName}");
-               writer.WriteLine();
-               writer.OpenBody();
-
-               for (var i = 0; i < sortedProperties.Count; i++)
-               {
-                  var prop = sortedProperties[i];
-                  writer.WriteText($"{prop.Name} = prop_{i},");
-                  writer.WriteLine();
-               }
-
-               writer.CloseBody(); // close object initializer
-               writer.WriteText(";");
-               writer.WriteLine();
-               writer.WriteText("return true;");
-               writer.WriteLine();
-            }
-         }
-         else
-         {
-            // Struct / Value Type
-            for (int i = 0; i < sortedProperties.Count; i++)
-            {
-               var prop = sortedProperties[i];
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-               {
-                  writer.WriteText($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
-               }
-               else
-               {
-                  writer.WriteText($"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
-               }
-
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("value = default;");
-               writer.WriteLine();
-               writer.WriteText("return false;");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-            }
-
-            writer.WriteText($"value = new {fullyQualifiedName}");
-            writer.WriteLine();
-            writer.OpenBody();
-            for (var i = 0; i < sortedProperties.Count; i++)
-            {
-               var prop = sortedProperties[i];
-               writer.WriteText($"{prop.Name} = prop_{i},");
-               writer.WriteLine();
-            }
-
-            writer.CloseBody(); // close object initializer
-            writer.WriteText(";");
-            writer.WriteLine();
-            writer.WriteText("return true;");
-            writer.WriteLine();
-         }
-
-         writer.CloseBody(); // close TryRead method
+         RenderTryReadMethod(ref writer, typeNameWithNullability, fullyQualifiedName, isReferenceType, isAbstract, sortedProperties, unions, duplicateTypes, duplicateTypeVarNames);
          writer.WriteLine();
 
          // CalculateByteLength Method
-         writer.WriteText($"public static int CalculateByteLength(scoped in {typeNameWithNullability} value)");
-         writer.WriteLine();
-         writer.OpenBody();
-
-         foreach (var dupType in duplicateTypes)
-         {
-            var varName = duplicateTypeVarNames[dupType];
-            writer.WriteText($"var calculate_{varName} = SerializerRegistry<{dupType}>.GetCalculateByteLength();");
-            writer.WriteLine();
-         }
-
-         if (isReferenceType)
-         {
-            if (unions.Count > 0)
-            {
-               // Polymorphic Reference Type
-               writer.WriteText("if (value is null)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("return sizeof(int);");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               foreach (var union in unions)
-               {
-                  var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                  writer.WriteText($"if (value is {unionTypeName} derived_{union.Tag})");
-                  writer.WriteLine();
-                  writer.OpenBody();
-                  writer.WriteText(
-                     $"return sizeof(int) + SerializerRegistry<{unionTypeName}?>.GetCalculateByteLength()(derived_{union.Tag});");
-                  writer.WriteLine();
-                  writer.CloseBody();
-                  writer.WriteLine();
-               }
-
-               if (!isAbstract)
-               {
-                  writer.WriteText("var length = sizeof(int);");
-                  writer.WriteLine();
-                  foreach (var prop in sortedProperties)
-                  {
-                     var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                     if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                     {
-                        writer.WriteText($"length += calculate_{varName}(value.{prop.Name});");
-                     }
-                     else
-                     {
-                        writer.WriteText(
-                           $"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
-                     }
-
-                     writer.WriteLine();
-                  }
-
-                  writer.WriteText("return length;");
-                  writer.WriteLine();
-               }
-               else
-               {
-                  writer.WriteText(
-                     "throw new InvalidOperationException(\"Cannot calculate length for abstract base type.\");");
-                  writer.WriteLine();
-               }
-            }
-            else
-            {
-               // Simple Reference Type
-               writer.WriteText("if (value is null)");
-               writer.WriteLine();
-               writer.OpenBody();
-               writer.WriteText("return sizeof(bool);");
-               writer.WriteLine();
-               writer.CloseBody();
-               writer.WriteLine();
-
-               writer.WriteText("var length = sizeof(bool);");
-               writer.WriteLine();
-               foreach (var prop in sortedProperties)
-               {
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-                  {
-                     writer.WriteText($"length += calculate_{varName}(value.{prop.Name});");
-                  }
-                  else
-                  {
-                     writer.WriteText(
-                        $"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
-                  }
-
-                  writer.WriteLine();
-               }
-
-               writer.WriteText("return length;");
-               writer.WriteLine();
-            }
-         }
-         else
-         {
-            // Struct / Value Type
-            writer.WriteText("var length = 0;");
-            writer.WriteLine();
-            foreach (var prop in sortedProperties)
-            {
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
-               {
-                  writer.WriteText($"length += calculate_{varName}(value.{prop.Name});");
-               }
-               else
-               {
-                  writer.WriteText(
-                     $"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
-               }
-
-               writer.WriteLine();
-            }
-
-            writer.WriteText("return length;");
-            writer.WriteLine();
-         }
-
-         writer.CloseBody(); // close CalculateByteLength method
+         RenderCalculateByteLengthMethod(ref writer, typeNameWithNullability, isReferenceType, isAbstract, sortedProperties, unions, duplicateTypes, duplicateTypeVarNames);
 
          writer.CloseBody(); // close class definition
-
          writer.WriteAutoGeneratedClose();
 
          return writer.ToString();
@@ -580,5 +88,409 @@ public sealed partial class SerializerGenerator
       {
          writer.Dispose();
       }
+   }
+
+   private static void RenderWriteMethod(
+      ref CodeTextWriter writer,
+      string typeNameWithNullability,
+      bool isReferenceType,
+      bool isAbstract,
+      List<IPropertySymbol> sortedProperties,
+      List<(int Tag, ITypeSymbol Type)> unions,
+      List<string> duplicateTypes,
+      Dictionary<string, string> duplicateTypeVarNames)
+   {
+      writer.WriteLineInterpolated($"public static int Write(ref BufferWriter<byte> writer, scoped in {typeNameWithNullability} value)");
+      writer.OpenBody();
+
+      foreach (var dupType in duplicateTypes)
+      {
+         var varName = duplicateTypeVarNames[dupType];
+         writer.WriteLineInterpolated($"var write_{varName} = SerializerRegistry<{dupType}>.GetWrite();");
+      }
+
+      if (isReferenceType)
+      {
+         if (unions.Count > 0)
+         {
+            // Polymorphic Reference Type
+            writer.WriteLine("if (value is null)");
+            writer.OpenBody();
+            writer.WriteLine("var span = writer.AcquireSpan(sizeof(int));");
+            writer.WriteLine("BinaryPrimitives.WriteInt32LittleEndian(span, -1);");
+            writer.WriteLine("return sizeof(int);");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            foreach (var union in unions)
+            {
+               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               writer.WriteLineInterpolated($"if (value is {unionTypeName} derived_{union.Tag})");
+               writer.OpenBody();
+               writer.WriteLine("var span = writer.AcquireSpan(sizeof(int));");
+               writer.WriteLineInterpolated($"BinaryPrimitives.WriteInt32LittleEndian(span, {union.Tag});");
+               writer.WriteLineInterpolated($"return sizeof(int) + SerializerRegistry<{unionTypeName}?>.GetWrite()(ref writer, derived_{union.Tag});");
+               writer.CloseBody();
+               writer.WriteLine();
+            }
+
+            if (!isAbstract)
+            {
+               writer.WriteLine("var baseSpan = writer.AcquireSpan(sizeof(int));");
+               writer.WriteLine("BinaryPrimitives.WriteInt32LittleEndian(baseSpan, 0);");
+               writer.WriteLine("var written = sizeof(int);");
+               foreach (var prop in sortedProperties)
+               {
+                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  {
+                     writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
+                  }
+                  else
+                  {
+                     writer.WriteLineInterpolated($"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
+                  }
+               }
+               writer.WriteLine("return written;");
+            }
+            else
+            {
+               writer.WriteLine("throw new InvalidOperationException(\"Cannot serialize abstract base type directly.\");");
+            }
+         }
+         else
+         {
+            // Simple Reference Type
+            writer.WriteLine("if (value is null)");
+            writer.OpenBody();
+            writer.WriteLine("var span = writer.AcquireSpan(sizeof(bool));");
+            writer.WriteLine("span[0] = 0;");
+            writer.WriteLine("return sizeof(bool);");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            writer.WriteLine("var presenceSpan = writer.AcquireSpan(sizeof(bool));");
+            writer.WriteLine("presenceSpan[0] = 1;");
+            writer.WriteLine("var written = sizeof(bool);");
+            foreach (var prop in sortedProperties)
+            {
+               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               {
+                  writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
+               }
+               else
+               {
+                  writer.WriteLineInterpolated($"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
+               }
+            }
+            writer.WriteLine("return written;");
+         }
+      }
+      else
+      {
+         // Struct / Value Type
+         writer.WriteLine("var written = 0;");
+         foreach (var prop in sortedProperties)
+         {
+            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            {
+               writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
+            }
+            else
+            {
+               writer.WriteLineInterpolated($"written += SerializerRegistry<{propType}>.GetWrite()(ref writer, value.{prop.Name});");
+            }
+         }
+         writer.WriteLine("return written;");
+      }
+
+      writer.CloseBody(); // close Write method
+   }
+
+   private static void RenderTryReadMethod(
+      ref CodeTextWriter writer,
+      string typeNameWithNullability,
+      string fullyQualifiedName,
+      bool isReferenceType,
+      bool isAbstract,
+      List<IPropertySymbol> sortedProperties,
+      List<(int Tag, ITypeSymbol Type)> unions,
+      List<string> duplicateTypes,
+      Dictionary<string, string> duplicateTypeVarNames)
+   {
+      writer.WriteLineInterpolated($"public static bool TryRead(ref SequenceReader<byte> reader, [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out {typeNameWithNullability} value)");
+      writer.OpenBody();
+
+      foreach (var dupType in duplicateTypes)
+      {
+         var varName = duplicateTypeVarNames[dupType];
+         writer.WriteLineInterpolated($"var tryRead_{varName} = SerializerRegistry<{dupType}>.GetTryRead();");
+      }
+
+      if (isReferenceType)
+      {
+         if (unions.Count > 0)
+         {
+            // Polymorphic Reference Type
+            writer.WriteLine("if (!reader.TryReadLittleEndian(out int tag))");
+            writer.OpenBody();
+            writer.WriteLine("value = null;");
+            writer.WriteLine("return false;");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            writer.WriteLine("if (tag == -1)");
+            writer.OpenBody();
+            writer.WriteLine("value = null;");
+            writer.WriteLine("return true;");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            foreach (var union in unions)
+            {
+               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               writer.WriteLineInterpolated($"if (tag == {union.Tag})");
+               writer.OpenBody();
+               writer.WriteLineInterpolated($"var success = SerializerRegistry<{unionTypeName}?>.GetTryRead()(ref reader, out var derived);");
+               writer.WriteLine("value = derived;");
+               writer.WriteLine("return success;");
+               writer.CloseBody();
+               writer.WriteLine();
+            }
+
+            if (!isAbstract)
+            {
+               writer.WriteLine("if (tag == 0)");
+               writer.OpenBody();
+               for (var i = 0; i < sortedProperties.Count; i++)
+               {
+                  var prop = sortedProperties[i];
+                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  {
+                     writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
+                  }
+                  else
+                  {
+                     writer.WriteLineInterpolated($"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
+                  }
+                  writer.OpenBody();
+                  writer.WriteLine("value = null;");
+                  writer.WriteLine("return false;");
+                  writer.CloseBody();
+                  writer.WriteLine();
+               }
+
+               writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
+               writer.OpenBody();
+               for (var i = 0; i < sortedProperties.Count; i++)
+               {
+                  var prop = sortedProperties[i];
+                  writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
+               }
+               writer.CloseBodySemicolon(); // close object initializer
+               writer.WriteLine("return true;");
+               writer.CloseBody();
+               writer.WriteLine();
+            }
+
+            writer.WriteLine("throw new InvalidOperationException($\"Unknown polymorphic tag {tag}.\");");
+         }
+         else
+         {
+            // Simple Reference Type
+            writer.WriteLine("if (reader.Remaining < sizeof(bool))");
+            writer.OpenBody();
+            writer.WriteLine("value = null;");
+            writer.WriteLine("return false;");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            writer.WriteLine("var hasValue = reader.UnreadSpan[0] != 0;");
+            writer.WriteLine("reader.Advance(sizeof(bool));");
+            writer.WriteLine();
+
+            writer.WriteLine("if (!hasValue)");
+            writer.OpenBody();
+            writer.WriteLine("value = null;");
+            writer.WriteLine("return true;");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            for (var i = 0; i < sortedProperties.Count; i++)
+            {
+               var prop = sortedProperties[i];
+               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               {
+                  writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
+               }
+               else
+               {
+                  writer.WriteLineInterpolated($"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
+               }
+               writer.OpenBody();
+               writer.WriteLine("value = null;");
+               writer.WriteLine("return false;");
+               writer.CloseBody();
+               writer.WriteLine();
+            }
+
+            writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
+            writer.OpenBody();
+            for (var i = 0; i < sortedProperties.Count; i++)
+            {
+               var prop = sortedProperties[i];
+               writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
+            }
+            writer.CloseBodySemicolon(); // close object initializer
+            writer.WriteLine("return true;");
+         }
+      }
+      else
+      {
+         // Struct / Value Type
+         for (var i = 0; i < sortedProperties.Count; i++)
+         {
+            var prop = sortedProperties[i];
+            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            {
+               writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
+            }
+            else
+            {
+               writer.WriteLineInterpolated($"if (!SerializerRegistry<{propType}>.GetTryRead()(ref reader, out var prop_{i}))");
+            }
+            writer.OpenBody();
+            writer.WriteLine("value = default;");
+            writer.WriteLine("return false;");
+            writer.CloseBody();
+            writer.WriteLine();
+         }
+
+         writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
+         writer.OpenBody();
+         for (var i = 0; i < sortedProperties.Count; i++)
+         {
+            var prop = sortedProperties[i];
+            writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
+         }
+         writer.CloseBodySemicolon(); // close object initializer
+         writer.WriteLine("return true;");
+      }
+
+      writer.CloseBody(); // close TryRead method
+   }
+
+   private static void RenderCalculateByteLengthMethod(
+      ref CodeTextWriter writer,
+      string typeNameWithNullability,
+      bool isReferenceType,
+      bool isAbstract,
+      List<IPropertySymbol> sortedProperties,
+      List<(int Tag, ITypeSymbol Type)> unions,
+      List<string> duplicateTypes,
+      Dictionary<string, string> duplicateTypeVarNames)
+   {
+      writer.WriteLineInterpolated($"public static int CalculateByteLength(scoped in {typeNameWithNullability} value)");
+      writer.OpenBody();
+
+      foreach (var dupType in duplicateTypes)
+      {
+         var varName = duplicateTypeVarNames[dupType];
+         writer.WriteLineInterpolated($"var calculate_{varName} = SerializerRegistry<{dupType}>.GetCalculateByteLength();");
+      }
+
+      if (isReferenceType)
+      {
+         if (unions.Count > 0)
+         {
+            // Polymorphic Reference Type
+            writer.WriteLine("if (value is null)");
+            writer.OpenBody();
+            writer.WriteLine("return sizeof(int);");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            foreach (var union in unions)
+            {
+               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               writer.WriteLineInterpolated($"if (value is {unionTypeName} derived_{union.Tag})");
+               writer.OpenBody();
+               writer.WriteLineInterpolated($"return sizeof(int) + SerializerRegistry<{unionTypeName}?>.GetCalculateByteLength()(derived_{union.Tag});");
+               writer.CloseBody();
+               writer.WriteLine();
+            }
+
+            if (!isAbstract)
+            {
+               writer.WriteLine("var length = sizeof(int);");
+               foreach (var prop in sortedProperties)
+               {
+                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  {
+                     writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
+                  }
+                  else
+                  {
+                     writer.WriteLineInterpolated($"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
+                  }
+               }
+               writer.WriteLine("return length;");
+            }
+            else
+            {
+               writer.WriteLine("throw new InvalidOperationException(\"Cannot calculate length for abstract base type.\");");
+            }
+         }
+         else
+         {
+            // Simple Reference Type
+            writer.WriteLine("if (value is null)");
+            writer.OpenBody();
+            writer.WriteLine("return sizeof(bool);");
+            writer.CloseBody();
+            writer.WriteLine();
+
+            writer.WriteLine("var length = sizeof(bool);");
+            foreach (var prop in sortedProperties)
+            {
+               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               {
+                  writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
+               }
+               else
+               {
+                  writer.WriteLineInterpolated($"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
+               }
+            }
+            writer.WriteLine("return length;");
+         }
+      }
+      else
+      {
+         // Struct / Value Type
+         writer.WriteLine("var length = 0;");
+         foreach (var prop in sortedProperties)
+         {
+            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            {
+               writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
+            }
+            else
+            {
+               writer.WriteLineInterpolated($"length += SerializerRegistry<{propType}>.GetCalculateByteLength()(value.{prop.Name});");
+            }
+         }
+         writer.WriteLine("return length;");
+      }
+
+      writer.CloseBody(); // close CalculateByteLength method
    }
 }
