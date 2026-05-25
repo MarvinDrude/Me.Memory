@@ -6,6 +6,7 @@
       <RootNamespace>Me.Memory.Serialization.Generator</RootNamespace>
       <LangVersion>latest</LangVersion>
       <Nullable>enable</Nullable>
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
    </PropertyGroup>
 
    <ItemGroup>

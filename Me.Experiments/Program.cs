@@ -1,4 +1,3 @@
-
 using System.Runtime.InteropServices;
 using Me.Memory.Buffers;
 using Me.Memory.Buffers.Spans;
@@ -31,26 +30,3 @@ using (new StackTimer(ref times))
 Console.WriteLine("Hello World! " + result.Elapsed.TotalMilliseconds);
 Console.WriteLine("Hello World! " + time.TotalMilliseconds);
 Console.WriteLine("Hello World! " + new TimeSpan(times).TotalMilliseconds);
-
-// var coll = new ServiceCollection();
-// coll.AddSingleton<A>();
-// coll.AddSingleton<B>();
-// var provider = coll.BuildServiceProvider();
-//
-// if (provider.TryGetServices<A, B>(out var a, out var b))
-// {
-//    Console.WriteLine(a.Name);
-//    Console.WriteLine(b.Name);
-// }
-//
-//
-//
-// public class A
-// {
-//    public string Name => "a";
-// }
-//
-// public class B
-// {
-//    public string Name => "b";
-// }
