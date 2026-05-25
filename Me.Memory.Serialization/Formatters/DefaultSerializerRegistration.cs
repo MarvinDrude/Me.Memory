@@ -1,6 +1,8 @@
 #pragma warning disable CA2255
 
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Me.Memory.Serialization.Formatters.System;
 using Me.Memory.Serialization.Formatters.Unmanaged;
 
@@ -120,5 +122,20 @@ internal static class DefaultSerializerRegistration
       SerializerRegistry<DateOnly>.Write = DateOnlySerializer.Write;
       SerializerRegistry<DateOnly>.TryRead = DateOnlySerializer.TryRead;
       SerializerRegistry<DateOnly>.CalculateByteLength = DateOnlySerializer.CalculateByteLength;
+
+      // BigInteger
+      SerializerRegistry<BigInteger>.Write = BigIntegerSerializer.Write;
+      SerializerRegistry<BigInteger>.TryRead = BigIntegerSerializer.TryRead;
+      SerializerRegistry<BigInteger>.CalculateByteLength = BigIntegerSerializer.CalculateByteLength;
+
+      // Complex
+      SerializerRegistry<Complex>.Write = ComplexSerializer.Write;
+      SerializerRegistry<Complex>.TryRead = ComplexSerializer.TryRead;
+      SerializerRegistry<Complex>.CalculateByteLength = ComplexSerializer.CalculateByteLength;
+
+      // StringBuilder
+      SerializerRegistry<StringBuilder?>.Write = StringBuilderSerializer.Write;
+      SerializerRegistry<StringBuilder?>.TryRead = StringBuilderSerializer.TryRead;
+      SerializerRegistry<StringBuilder?>.CalculateByteLength = StringBuilderSerializer.CalculateByteLength;
    }
 }

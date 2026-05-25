@@ -1,6 +1,8 @@
 #pragma warning disable CS8600, CS8619
 
 using System.Buffers;
+using System.Numerics;
+using System.Text;
 using Me.Memory.Buffers;
 using Me.Memory.Serialization;
 using Me.Memory.Serialization.Formatters.Collections;
@@ -244,4 +246,163 @@ public class SystemSerializerTests
        var success = ArraySerializer<int>.TryRead(ref reader, out int[]? readValue);
        return (success, readValue, reader.Remaining);
     }
+
+     [Test]
+     public async Task TestNullableSerializers()
+     {
+        // Test nullable int
+        int? valInt = 42;
+        int? nullInt = null;
+        await TestSerializer<int?, NullableSerializer<int>>(valInt, sizeof(bool) + sizeof(int));
+        await TestSerializer<int?, NullableSerializer<int>>(nullInt, sizeof(bool));
+
+        // Test nullable Guid
+        Guid? valGuid = Guid.NewGuid();
+        Guid? nullGuid = null;
+        await TestSerializer<Guid?, NullableSerializer<Guid>>(valGuid, sizeof(bool) + 16);
+        await TestSerializer<Guid?, NullableSerializer<Guid>>(nullGuid, sizeof(bool));
+
+        // Test dynamic registry lookup for Nullable
+        var writeDel = SerializerRegistry<int?>.GetWrite();
+        await Assert.That(writeDel).IsNotNull();
+     }
+
+     [Test]
+     public async Task TestLazySerializer()
+     {
+        // Test lazy int
+        Lazy<int>? valLazy = new Lazy<int>(() => 42);
+        Lazy<int>? nullLazy = null;
+        
+        // Test active lazy
+        int expectedSize = sizeof(bool) + sizeof(int);
+        var length = LazySerializer<int>.CalculateByteLength(in valLazy);
+        await Assert.That(length).IsEqualTo(expectedSize);
+
+        byte[] buffer = new byte[expectedSize];
+        var writer = new BufferWriter<byte>(buffer);
+        var written = LazySerializer<int>.Write(ref writer, in valLazy);
+        await Assert.That(written).IsEqualTo(expectedSize);
+
+        var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+        var success = LazySerializer<int>.TryRead(ref reader, out var readValue);
+        await Assert.That(success).IsTrue();
+        await Assert.That(readValue).IsNotNull();
+        await Assert.That(readValue!.Value).IsEqualTo(42);
+
+        // Test null lazy
+        expectedSize = sizeof(bool);
+        length = LazySerializer<int>.CalculateByteLength(in nullLazy);
+        await Assert.That(length).IsEqualTo(expectedSize);
+
+        buffer = new byte[expectedSize];
+        writer = new BufferWriter<byte>(buffer);
+        written = LazySerializer<int>.Write(ref writer, in nullLazy);
+        await Assert.That(written).IsEqualTo(expectedSize);
+
+        reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+        success = LazySerializer<int>.TryRead(ref reader, out readValue);
+        await Assert.That(success).IsTrue();
+        await Assert.That(readValue).IsNull();
+     }
+
+     [Test]
+     public async Task TestBigIntegerSerializer()
+     {
+        var valZero = BigInteger.Zero;
+        var valSmall = new BigInteger(42);
+        var valLarge = BigInteger.Parse("123456789012345678901234567890");
+
+        await TestSerializer<BigInteger, BigIntegerSerializer>(valZero, sizeof(int) + valZero.GetByteCount());
+        await TestSerializer<BigInteger, BigIntegerSerializer>(valSmall, sizeof(int) + valSmall.GetByteCount());
+        await TestSerializer<BigInteger, BigIntegerSerializer>(valLarge, sizeof(int) + valLarge.GetByteCount());
+     }
+
+     [Test]
+     public async Task TestComplexSerializer()
+     {
+        var valZero = Complex.Zero;
+        var valOne = Complex.One;
+        var valCustom = new Complex(3.14, -2.71);
+
+        await TestSerializer<Complex, ComplexSerializer>(valZero, sizeof(double) * 2);
+        await TestSerializer<Complex, ComplexSerializer>(valOne, sizeof(double) * 2);
+        await TestSerializer<Complex, ComplexSerializer>(valCustom, sizeof(double) * 2);
+     }
+
+     public enum TestByteEnum : byte
+     {
+        A = 1,
+        B = 2,
+        C = 3
+     }
+
+     public enum TestIntEnum : int
+     {
+        X = 10,
+        Y = 20,
+        Z = 30
+     }
+
+     [Test]
+     public async Task TestEnumSerializer()
+     {
+        await TestSerializer<TestByteEnum, EnumSerializer<TestByteEnum>>(TestByteEnum.B, sizeof(byte));
+        await TestSerializer<TestIntEnum, EnumSerializer<TestIntEnum>>(TestIntEnum.Y, sizeof(int));
+     }
+
+     [Test]
+     public async Task TestStringBuilderSerializer()
+     {
+        StringBuilder? valSb = new StringBuilder("Hello world! C# 13 is awesome.");
+        StringBuilder? nullSb = null;
+        StringBuilder? emptySb = new StringBuilder();
+
+        // Test non-null
+        int expectedSize = sizeof(int) + System.Text.Encoding.UTF8.GetByteCount(valSb.ToString());
+        var length = StringBuilderSerializer.CalculateByteLength(in valSb);
+        await Assert.That(length).IsEqualTo(expectedSize);
+
+        byte[] buffer = new byte[expectedSize];
+        var writer = new BufferWriter<byte>(buffer);
+        var written = StringBuilderSerializer.Write(ref writer, in valSb);
+        await Assert.That(written).IsEqualTo(expectedSize);
+
+        var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+        var success = StringBuilderSerializer.TryRead(ref reader, out var readValue);
+        await Assert.That(success).IsTrue();
+        await Assert.That(readValue).IsNotNull();
+        await Assert.That(readValue!.ToString()).IsEqualTo(valSb.ToString());
+
+        // Test null
+        expectedSize = sizeof(int);
+        length = StringBuilderSerializer.CalculateByteLength(in nullSb);
+        await Assert.That(length).IsEqualTo(expectedSize);
+
+        buffer = new byte[expectedSize];
+        writer = new BufferWriter<byte>(buffer);
+        written = StringBuilderSerializer.Write(ref writer, in nullSb);
+        await Assert.That(written).IsEqualTo(expectedSize);
+
+        reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+        success = StringBuilderSerializer.TryRead(ref reader, out readValue);
+        await Assert.That(success).IsTrue();
+        await Assert.That(readValue).IsNull();
+
+        // Test empty
+        expectedSize = sizeof(int);
+        length = StringBuilderSerializer.CalculateByteLength(in emptySb);
+        await Assert.That(length).IsEqualTo(expectedSize);
+
+        buffer = new byte[expectedSize];
+        writer = new BufferWriter<byte>(buffer);
+        written = StringBuilderSerializer.Write(ref writer, in emptySb);
+        await Assert.That(written).IsEqualTo(expectedSize);
+
+        reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+        success = StringBuilderSerializer.TryRead(ref reader, out readValue);
+        await Assert.That(success).IsTrue();
+        await Assert.That(readValue).IsNotNull();
+        await Assert.That(readValue!.ToString()).IsEmpty();
+     }
 }
