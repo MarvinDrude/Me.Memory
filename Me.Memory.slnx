@@ -1,4 +1,12 @@
 <Solution>
+  <Folder Name="/Additional Files/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="NuGet.Config" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="Me.Experiments\Me.Experiments.csproj" />
   <Project Path="Me.Memory.Benchmarks\Me.Memory.Benchmarks.csproj" />
   <Project Path="Me.Memory.Embedded.Generator/Me.Memory.Embedded.Generator.csproj" />
