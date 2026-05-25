@@ -1,5 +1,3 @@
-#pragma warning disable CS8762
-
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
@@ -30,7 +28,7 @@ public sealed class StringSerializer : ISerializer<string?>
       return sizeof(int) + byteCount;
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, [MaybeNullWhen(false)] out string value)
+   public bool TryRead(ref SequenceReader<byte> reader, out string? value)
    {
       if (!reader.TryReadLittleEndian(out int length))
       {
