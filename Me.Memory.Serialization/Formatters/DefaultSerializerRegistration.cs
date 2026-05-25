@@ -1,8 +1,10 @@
 #pragma warning disable CA2255
 
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Me.Memory.Serialization.Formatters.Collections;
 using Me.Memory.Serialization.Formatters.System;
 using Me.Memory.Serialization.Formatters.Unmanaged;
 
@@ -41,6 +43,9 @@ internal static class DefaultSerializerRegistration
       Register<BigInteger>(BigIntegerSerializer.Write, BigIntegerSerializer.TryRead, BigIntegerSerializer.CalculateByteLength);
       Register<Complex>(ComplexSerializer.Write, ComplexSerializer.TryRead, ComplexSerializer.CalculateByteLength);
       Register<StringBuilder?>(StringBuilderSerializer.Write, StringBuilderSerializer.TryRead, StringBuilderSerializer.CalculateByteLength);
+
+      // Collections
+      Register<BitArray?>(BitArraySerializer.Write, BitArraySerializer.TryRead, BitArraySerializer.CalculateByteLength);
    }
 
    [MethodImpl(MethodImplOptions.AggressiveInlining)]
