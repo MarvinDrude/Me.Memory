@@ -182,4 +182,26 @@ public class PolymorphicSerializerTests
          await Assert.That(read).IsNull();
       });
    }
+
+   [Test]
+   public async Task TestHighLevelSerializerUtility()
+   {
+      var obj = new SimpleTestClass { Id = 123, Name = "HighLevel" };
+      
+      // Serialize using high-level utility
+      byte[] bytes = MeSerializer.Serialize<SimpleTestClass?>(obj);
+      
+      // Verify size matches expected SimpleTestClass size
+      // presence(1) + Id(4) + string(presence(4) + utf8(9)) = 18
+      int expectedSize = 1 + sizeof(int) + (sizeof(int) + 9);
+      await Assert.That(bytes.Length).IsEqualTo(expectedSize);
+      
+      // Deserialize using high-level utility
+      var success = MeSerializer.TryDeserialize<SimpleTestClass?>(bytes, out var result);
+      
+      await Assert.That(success).IsTrue();
+      await Assert.That(result).IsNotNull();
+      await Assert.That(result!.Id).IsEqualTo(obj.Id);
+      await Assert.That(result.Name).IsEqualTo(obj.Name);
+   }
 }

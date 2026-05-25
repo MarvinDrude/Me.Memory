@@ -37,16 +37,19 @@
                         ReferenceOutputAssembly="false"
                         PackagePath="analyzers/dotnet/cs" />
    </ItemGroup>
+   
+   <ItemGroup>
+      <None Include="..\Me.Memory.Serialization.Generator\bin\$(Configuration)\$(TargetFramework)\Me.Memory.Serialization.Generator.dll"
+            Pack="true"
+            PackagePath="analyzers/dotnet/cs"
+            Visible="true" />
+   </ItemGroup>
 
    <ItemGroup>
      <PackageReference Include="Microsoft.SourceLink.GitHub">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
      </PackageReference>
-   </ItemGroup>
-
-   <ItemGroup>
-     <Folder Include="Attributes\" />
    </ItemGroup>
 
 </Project>

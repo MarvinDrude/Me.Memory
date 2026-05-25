@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using Beskar.CodeGeneration.Extensions.Rendering;
-using Microsoft.CodeAnalysis;
 using Me.Memory.Code;
+using Microsoft.CodeAnalysis;
 
 #pragma warning disable CS0436 // Type conflicts with imported type
 
