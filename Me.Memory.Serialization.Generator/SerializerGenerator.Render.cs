@@ -4,33 +4,30 @@ using System.Collections.Generic;
 using System.Linq;
 using Beskar.CodeGeneration.Extensions.Rendering;
 using Me.Memory.Code;
+using Me.Memory.Collections;
 using Microsoft.CodeAnalysis;
-
-#pragma warning disable CS0436 // Type conflicts with imported type
 
 namespace Me.Memory.Serialization.Generator;
 
 public sealed partial class SerializerGenerator
 {
-   private static string GenerateSerializerSource(INamedTypeSymbol typeSymbol)
+   private static string GenerateSerializerSource(SerializerGenerationData data)
    {
-      var ns = typeSymbol.ContainingNamespace.IsGlobalNamespace
-         ? ""
-         : typeSymbol.ContainingNamespace.ToDisplayString();
-      var typeName = typeSymbol.Name;
-      var isReferenceType = typeSymbol.IsReferenceType;
-      var isAbstract = typeSymbol.IsAbstract;
-      var fullyQualifiedName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-      var typeNameWithNullability = isReferenceType ? $"{fullyQualifiedName}?" : fullyQualifiedName;
+      var ns = data.Namespace;
+      var typeName = data.TypeName;
+      var isReferenceType = data.IsReferenceType;
+      var isAbstract = data.IsAbstract;
+      var fullyQualifiedName = data.FullyQualifiedName;
+      var typeNameWithNullability = data.TypeNameWithNullability;
 
-      var sortedProperties = CollectPositionedProperties(typeSymbol);
-      var unions = CollectUnions(typeSymbol);
+      var sortedProperties = data.Properties;
+      var unions = data.Unions;
 
       // Find duplicate types in properties to cache their delegates
       var typeCounts = new Dictionary<string, int>();
       foreach (var prop in sortedProperties)
       {
-         var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+         var propType = prop.TypeFullyQualifiedName;
          typeCounts[propType] = typeCounts.TryGetValue(propType, out var count) ? count + 1 : 1;
       }
 
@@ -95,8 +92,8 @@ public sealed partial class SerializerGenerator
       string typeNameWithNullability,
       bool isReferenceType,
       bool isAbstract,
-      List<IPropertySymbol> sortedProperties,
-      List<(int Tag, ITypeSymbol Type)> unions,
+      SequenceArray<PropertyInfo> sortedProperties,
+      SequenceArray<UnionInfo> unions,
       List<string> duplicateTypes,
       Dictionary<string, string> duplicateTypeVarNames)
    {
@@ -111,7 +108,7 @@ public sealed partial class SerializerGenerator
 
       if (isReferenceType)
       {
-         if (unions.Count > 0)
+         if (unions.Array.Length > 0)
          {
             // Polymorphic Reference Type
             writer.WriteLine("if (value is null)");
@@ -124,7 +121,7 @@ public sealed partial class SerializerGenerator
 
             foreach (var union in unions)
             {
-               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var unionTypeName = union.TypeFullyQualifiedName;
                writer.WriteLineInterpolated($"if (value is {unionTypeName} derived_{union.Tag})");
                writer.OpenBody();
                writer.WriteLine("var span = writer.AcquireSpan(sizeof(int));");
@@ -141,7 +138,7 @@ public sealed partial class SerializerGenerator
                writer.WriteLine("var written = sizeof(int);");
                foreach (var prop in sortedProperties)
                {
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  var propType = prop.TypeFullyQualifiedName;
                   if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
@@ -174,7 +171,7 @@ public sealed partial class SerializerGenerator
             writer.WriteLine("var written = sizeof(bool);");
             foreach (var prop in sortedProperties)
             {
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var propType = prop.TypeFullyQualifiedName;
                if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
@@ -193,7 +190,7 @@ public sealed partial class SerializerGenerator
          writer.WriteLine("var written = 0;");
          foreach (var prop in sortedProperties)
          {
-            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var propType = prop.TypeFullyQualifiedName;
             if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
@@ -215,8 +212,8 @@ public sealed partial class SerializerGenerator
       string fullyQualifiedName,
       bool isReferenceType,
       bool isAbstract,
-      List<IPropertySymbol> sortedProperties,
-      List<(int Tag, ITypeSymbol Type)> unions,
+      SequenceArray<PropertyInfo> sortedProperties,
+      SequenceArray<UnionInfo> unions,
       List<string> duplicateTypes,
       Dictionary<string, string> duplicateTypeVarNames)
    {
@@ -231,7 +228,7 @@ public sealed partial class SerializerGenerator
 
       if (isReferenceType)
       {
-         if (unions.Count > 0)
+         if (unions.Array.Length > 0)
          {
             // Polymorphic Reference Type
             writer.WriteLine("if (!reader.TryReadLittleEndian(out int tag))");
@@ -250,7 +247,7 @@ public sealed partial class SerializerGenerator
 
             foreach (var union in unions)
             {
-               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var unionTypeName = union.TypeFullyQualifiedName;
                writer.WriteLineInterpolated($"if (tag == {union.Tag})");
                writer.OpenBody();
                writer.WriteLineInterpolated($"var success = SerializerRegistry<{unionTypeName}?>.GetTryRead()(ref reader, out var derived);");
@@ -264,10 +261,10 @@ public sealed partial class SerializerGenerator
             {
                writer.WriteLine("if (tag == 0)");
                writer.OpenBody();
-               for (var i = 0; i < sortedProperties.Count; i++)
+               for (var i = 0; i < sortedProperties.Array.Length; i++)
                {
-                  var prop = sortedProperties[i];
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  var prop = sortedProperties.Array[i];
+                  var propType = prop.TypeFullyQualifiedName;
                   if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
@@ -285,9 +282,9 @@ public sealed partial class SerializerGenerator
 
                writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
                writer.OpenBody();
-               for (var i = 0; i < sortedProperties.Count; i++)
+               for (var i = 0; i < sortedProperties.Array.Length; i++)
                {
-                  var prop = sortedProperties[i];
+                  var prop = sortedProperties.Array[i];
                   writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
                }
                writer.CloseBodySemicolon(); // close object initializer
@@ -319,10 +316,10 @@ public sealed partial class SerializerGenerator
             writer.CloseBody();
             writer.WriteLine();
 
-            for (var i = 0; i < sortedProperties.Count; i++)
+            for (var i = 0; i < sortedProperties.Array.Length; i++)
             {
-               var prop = sortedProperties[i];
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var prop = sortedProperties.Array[i];
+               var propType = prop.TypeFullyQualifiedName;
                if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
@@ -340,9 +337,9 @@ public sealed partial class SerializerGenerator
 
             writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
             writer.OpenBody();
-            for (var i = 0; i < sortedProperties.Count; i++)
+            for (var i = 0; i < sortedProperties.Array.Length; i++)
             {
-               var prop = sortedProperties[i];
+               var prop = sortedProperties.Array[i];
                writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
             }
             writer.CloseBodySemicolon(); // close object initializer
@@ -352,10 +349,10 @@ public sealed partial class SerializerGenerator
       else
       {
          // Struct / Value Type
-         for (var i = 0; i < sortedProperties.Count; i++)
+         for (var i = 0; i < sortedProperties.Array.Length; i++)
          {
-            var prop = sortedProperties[i];
-            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var prop = sortedProperties.Array[i];
+            var propType = prop.TypeFullyQualifiedName;
             if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
@@ -373,9 +370,9 @@ public sealed partial class SerializerGenerator
 
          writer.WriteLineInterpolated($"value = new {fullyQualifiedName}");
          writer.OpenBody();
-         for (var i = 0; i < sortedProperties.Count; i++)
+         for (var i = 0; i < sortedProperties.Array.Length; i++)
          {
-            var prop = sortedProperties[i];
+            var prop = sortedProperties.Array[i];
             writer.WriteLineInterpolated($"{prop.Name} = prop_{i},");
          }
          writer.CloseBodySemicolon(); // close object initializer
@@ -390,8 +387,8 @@ public sealed partial class SerializerGenerator
       string typeNameWithNullability,
       bool isReferenceType,
       bool isAbstract,
-      List<IPropertySymbol> sortedProperties,
-      List<(int Tag, ITypeSymbol Type)> unions,
+      SequenceArray<PropertyInfo> sortedProperties,
+      SequenceArray<UnionInfo> unions,
       List<string> duplicateTypes,
       Dictionary<string, string> duplicateTypeVarNames)
    {
@@ -406,7 +403,7 @@ public sealed partial class SerializerGenerator
 
       if (isReferenceType)
       {
-         if (unions.Count > 0)
+         if (unions.Array.Length > 0)
          {
             // Polymorphic Reference Type
             writer.WriteLine("if (value is null)");
@@ -417,7 +414,7 @@ public sealed partial class SerializerGenerator
 
             foreach (var union in unions)
             {
-               var unionTypeName = union.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var unionTypeName = union.TypeFullyQualifiedName;
                writer.WriteLineInterpolated($"if (value is {unionTypeName} derived_{union.Tag})");
                writer.OpenBody();
                writer.WriteLineInterpolated($"return sizeof(int) + SerializerRegistry<{unionTypeName}?>.GetCalculateByteLength()(derived_{union.Tag});");
@@ -430,7 +427,7 @@ public sealed partial class SerializerGenerator
                writer.WriteLine("var length = sizeof(int);");
                foreach (var prop in sortedProperties)
                {
-                  var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                  var propType = prop.TypeFullyQualifiedName;
                   if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
@@ -459,7 +456,7 @@ public sealed partial class SerializerGenerator
             writer.WriteLine("var length = sizeof(bool);");
             foreach (var prop in sortedProperties)
             {
-               var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+               var propType = prop.TypeFullyQualifiedName;
                if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
@@ -478,7 +475,7 @@ public sealed partial class SerializerGenerator
          writer.WriteLine("var length = 0;");
          foreach (var prop in sortedProperties)
          {
-            var propType = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var propType = prop.TypeFullyQualifiedName;
             if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Me.Memory.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -15,9 +16,10 @@ public sealed partial class SerializerGenerator
          or RecordDeclarationSyntax { AttributeLists.Count: > 0 };
    }
 
-   private static TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+   private static SerializerGenerationData? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
    {
       var typeDecl = (TypeDeclarationSyntax)context.Node;
+      var isTarget = false;
       
       foreach (var attributeList in typeDecl.AttributeLists)
       {
@@ -29,12 +31,52 @@ public sealed partial class SerializerGenerator
             var attribContainingType = attribSymbol.ContainingType.ToDisplayString();
             if (attribContainingType == GenerateSerializerAttributeFullName)
             {
-               return typeDecl;
+               isTarget = true;
+               break;
             }
          }
+         if (isTarget) break;
       }
       
-      return null;
+      if (!isTarget) return null;
+
+      if (context.SemanticModel.GetDeclaredSymbol(typeDecl) is not INamedTypeSymbol typeSymbol)
+      {
+         return null;
+      }
+
+      var ns = typeSymbol.ContainingNamespace.IsGlobalNamespace
+         ? ""
+         : typeSymbol.ContainingNamespace.ToDisplayString();
+      var typeName = typeSymbol.Name;
+      var isReferenceType = typeSymbol.IsReferenceType;
+      var isAbstract = typeSymbol.IsAbstract;
+      var fullyQualifiedName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+      var typeNameWithNullability = isReferenceType ? $"{fullyQualifiedName}?" : fullyQualifiedName;
+
+      var sortedProperties = CollectPositionedProperties(typeSymbol);
+      var unions = CollectUnions(typeSymbol);
+
+      var properties = new SequenceArray<PropertyInfo>(sortedProperties.Select(prop => new PropertyInfo(
+         prop.Name,
+         prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+      )).ToArray());
+
+      var unionInfos = new SequenceArray<UnionInfo>(unions.Select(u => new UnionInfo(
+         u.Tag,
+         u.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+      )).ToArray());
+
+      return new SerializerGenerationData(
+         ns,
+         typeName,
+         isReferenceType,
+         isAbstract,
+         fullyQualifiedName,
+         typeNameWithNullability,
+         properties,
+         unionInfos
+      );
    }
 
    private static List<IPropertySymbol> CollectPositionedProperties(INamedTypeSymbol typeSymbol)
