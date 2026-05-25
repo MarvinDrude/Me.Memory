@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Me.Memory.Collections;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -88,17 +85,25 @@ public sealed partial class SerializerGenerator
       {
          foreach (var member in currentType.GetMembers())
          {
-            if (member is IPropertySymbol property)
+            if (member is IPropertySymbol { IsReadOnly: false, DeclaredAccessibility: not Accessibility.Private } property)
             {
                properties.Add(property);
             }
          }
+         
          currentType = currentType.BaseType;
       }
 
       var positionedProperties = new List<(int Position, IPropertySymbol Property)>();
       foreach (var prop in properties)
       {
+         var hasIgnore = prop.GetAttributes().Any(a => 
+            a.AttributeClass?.ToDisplayString() == SerializerIgnoreAttributeFullName);
+         if (hasIgnore)
+         {
+            continue;
+         }
+
          var attr = prop.GetAttributes().FirstOrDefault(a => 
             a.AttributeClass?.ToDisplayString() == SerializerPositionAttributeFullName);
          

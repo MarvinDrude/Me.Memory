@@ -21,6 +21,20 @@ public class SimpleTestClass
 }
 
 [GenerateSerializer]
+public class IgnoreTestClass
+{
+   [SerializerPosition(0)]
+   public int Id { get; set; }
+
+   [SerializerPosition(1)]
+   [SerializerIgnore]
+   public string? IgnoredProperty { get; set; }
+
+   [SerializerPosition(2)]
+   public bool Flag { get; set; }
+}
+
+[GenerateSerializer]
 public struct SimpleTestStruct
 {
    [SerializerPosition(0)]
@@ -171,5 +185,30 @@ public class PolymorphicSerializerTests
       await Assert.That(result).IsNotNull();
       await Assert.That(result!.Id).IsEqualTo(obj.Id);
       await Assert.That(result.Name).IsEqualTo(obj.Name);
+   }
+
+   [Test]
+   public async Task TestSerializerIgnore()
+   {
+      var obj = new IgnoreTestClass
+      {
+         Id = 42,
+         IgnoredProperty = "Should be ignored",
+         Flag = true
+      };
+
+      // Since IgnoredProperty has [SerializerIgnore], only Id and Flag should be serialized.
+      // Expected size:
+      // presence(1) + Id(4) + Flag(1) = 6 bytes
+      int expectedSize = 1 + sizeof(int) + sizeof(bool);
+      
+      await TestSerializerDirect<IgnoreTestClass?, IgnoreTestClassSerializer>(obj, expectedSize, async (read, expected) =>
+      {
+         await Assert.That(read).IsNotNull();
+         await Assert.That(read!.Id).IsEqualTo(expected!.Id);
+         await Assert.That(read.Flag).IsEqualTo(expected.Flag);
+         // IgnoredProperty should be null in the deserialized object because it wasn't serialized
+         await Assert.That(read.IgnoredProperty).IsNull();
+      });
    }
 }
