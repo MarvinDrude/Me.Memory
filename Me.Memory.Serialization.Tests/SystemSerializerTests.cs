@@ -3,6 +3,7 @@
 using System.Buffers;
 using Me.Memory.Buffers;
 using Me.Memory.Serialization;
+using Me.Memory.Serialization.Formatters.Collections;
 using Me.Memory.Serialization.Formatters.System;
 using Me.Memory.Serialization.Interfaces;
 
@@ -139,5 +140,109 @@ public class SystemSerializerTests
        await Assert.That(SerializerRegistry<Guid>.Write).IsNotNull();
        await Assert.That(SerializerRegistry<DateTime>.Write).IsNotNull();
        await Assert.That(SerializerRegistry<Uri>.Write).IsNotNull();
+    }
+
+    [Test]
+    public async Task TestArraySerializer()
+    {
+       int[] intValues = [10, 20, 30, 40, 50];
+       int expectedSize = sizeof(int) + (sizeof(int) * intValues.Length); // 4 + 4*5 = 24
+       
+       byte[] buffer = new byte[expectedSize];
+       var writer = new BufferWriter<byte>(buffer);
+       ArraySerializer<int>.Write(ref writer, intValues);
+       
+       var (readSuccess, readValue, remaining) = ReadContiguous(buffer);
+       Console.WriteLine($"DEBUG: readSuccess={readSuccess}, remaining={remaining}, elements=[{string.Join(", ", readValue ?? [])}]");
+
+       await TestArray(intValues, expectedSize);
+
+       // Also test a null array
+       int[]? nullArray = null;
+       int expectedNullSize = sizeof(int); // 4 bytes for -1
+       await TestArray(nullArray, expectedNullSize);
+
+       // Also test empty array
+       int[] emptyArray = [];
+       int expectedEmptySize = sizeof(int); // 4 bytes for 0
+       await TestArray(emptyArray, expectedEmptySize);
+    }
+
+    private static async Task TestArray(int[]? value, int expectedSize)
+    {
+       // 1. Calculate length
+       var length = ArraySerializer<int>.CalculateByteLength(in value!);
+       await Assert.That(length).IsEqualTo(expectedSize);
+       
+       // 2. Write and contiguous read
+       byte[] buffer = new byte[expectedSize];
+       
+       var writer = new BufferWriter<byte>(buffer);
+       var written = ArraySerializer<int>.Write(ref writer, in value!);
+       
+       var (readSuccess, readValue, remaining) = ReadContiguous(buffer);
+       
+       await Assert.That(written).IsEqualTo(expectedSize);
+       await Assert.That(readSuccess).IsTrue();
+       await Assert.That(remaining).IsEqualTo(0);
+
+       if (value is null)
+       {
+          await Assert.That(readValue).IsNull();
+       }
+       else
+       {
+          await Assert.That(readValue).IsNotNull();
+          await Assert.That(readValue!.Length).IsEqualTo(value.Length);
+          for (int i = 0; i < value.Length; i++)
+          {
+             await Assert.That(readValue[i]).IsEqualTo(value[i]);
+          }
+       }
+       
+       // 3. Multi-segment read
+       if (expectedSize > 1)
+       {
+          BufferSegment<byte> firstSegment = new(new byte[] { buffer[0] });
+          BufferSegment<byte> currentSegment = firstSegment;
+          for (int i = 1; i < expectedSize; i++)
+          {
+             currentSegment = currentSegment.Append(new byte[] { buffer[i] });
+          }
+          
+          var multiSegmentSequence = new ReadOnlySequence<byte>(firstSegment, 0, currentSegment, 1);
+          var (multiReadSuccess, multiReadValue, multiRemaining) = ReadMulti(multiSegmentSequence);
+          
+          await Assert.That(multiReadSuccess).IsTrue();
+          await Assert.That(multiRemaining).IsEqualTo(0);
+
+          if (value is null)
+          {
+             await Assert.That(multiReadValue).IsNull();
+          }
+          else
+          {
+             await Assert.That(multiReadValue).IsNotNull();
+             await Assert.That(multiReadValue!.Length).IsEqualTo(value.Length);
+             for (int i = 0; i < value.Length; i++)
+             {
+                await Assert.That(multiReadValue[i]).IsEqualTo(value[i]);
+             }
+          }
+       }
+    }
+
+    private static (bool success, int[]? readValue, long remaining) ReadContiguous(byte[] buffer)
+    {
+       var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+       var success = ArraySerializer<int>.TryRead(ref reader, out int[]? readValue);
+       return (success, readValue, reader.Remaining);
+    }
+
+    private static (bool success, int[]? readValue, long remaining) ReadMulti(ReadOnlySequence<byte> sequence)
+    {
+       var reader = new SequenceReader<byte>(sequence);
+       var success = ArraySerializer<int>.TryRead(ref reader, out int[]? readValue);
+       return (success, readValue, reader.Remaining);
     }
 }

@@ -17,4 +17,17 @@ public interface ISerializer<T> : ISerializer
    public static abstract int CalculateByteLength(scoped in T value);
 }
 
+/// <summary>
+/// Core instance-based generic serializer interface used for dynamic lookup and runtime resolution.
+/// </summary>
+public interface IInstanceSerializer<T>
+   where T : allows ref struct
+{
+   public int Write(ref BufferWriter<byte> writer, scoped in T value);
+   
+   public bool TryRead(ref SequenceReader<byte> reader, [MaybeNullWhen(false)] out T value);
+
+   public int CalculateByteLength(scoped in T value);
+}
+
 public interface ISerializer;

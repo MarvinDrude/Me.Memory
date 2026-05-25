@@ -33,4 +33,22 @@ public static class SerializerRegistry<T>
    /// The cached static length calculation delegate for type <typeparamref name="T"/>.
    /// </summary>
    public static CalculateByteLengthDelegate<T>? CalculateByteLength { get; set; }
+   
+   /// <summary>
+   /// Gets the cached static write delegate for type <typeparamref name="T"/>.
+   /// </summary>
+   public static WriteDelegate<T> GetWrite() => Write 
+      ?? throw new InvalidOperationException($"Write delegate not set for type {typeof(T)}.");
+   
+   /// <summary>
+   /// Gets the cached static read delegate for type <typeparamref name="T"/>.
+   /// </summary>
+   public static TryReadDelegate<T> GetTryRead() => TryRead 
+      ?? throw new InvalidOperationException($"TryRead delegate not set for type {typeof(T)}.");
+   
+   /// <summary>
+   /// Gets the cached static length calculation delegate for type <typeparamref name="T"/>.
+   /// </summary>
+   public static CalculateByteLengthDelegate<T> GetCalculateByteLength() => CalculateByteLength 
+      ?? throw new InvalidOperationException($"CalculateByteLength delegate not set for type {typeof(T)}.");
 }
