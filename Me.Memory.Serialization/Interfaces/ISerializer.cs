@@ -11,7 +11,7 @@ public interface ISerializer<T> : ISerializer
    
    public bool TryRead(ref SequenceReader<byte> reader, [MaybeNullWhen(false)] out T value);
 
-   public int CalculateByteLength(ref T value);
+   public int CalculateByteLength(scoped in T value);
 }
 
 public interface ISerializer;

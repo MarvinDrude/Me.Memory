@@ -37,7 +37,7 @@ public sealed class SingleSerializer : ISerializer<float>
       return false;
    }
 
-   public int CalculateByteLength(ref float value)
+   public int CalculateByteLength(scoped in float value)
    {
       return sizeof(float);
    }

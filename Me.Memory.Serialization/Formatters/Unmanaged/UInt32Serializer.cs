@@ -37,7 +37,7 @@ public sealed class UInt32Serializer : ISerializer<uint>
       return false;
    }
 
-   public int CalculateByteLength(ref uint value)
+   public int CalculateByteLength(scoped in uint value)
    {
       return sizeof(uint);
    }

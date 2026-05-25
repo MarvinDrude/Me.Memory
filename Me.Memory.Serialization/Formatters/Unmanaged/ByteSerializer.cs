@@ -29,7 +29,7 @@ public sealed class ByteSerializer : ISerializer<byte>
       return reader.TryRead(out value);
    }
 
-   public int CalculateByteLength(ref byte value)
+   public int CalculateByteLength(scoped in byte value)
    {
       return sizeof(byte);
    }

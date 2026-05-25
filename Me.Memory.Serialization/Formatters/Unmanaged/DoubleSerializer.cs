@@ -37,7 +37,7 @@ public sealed class DoubleSerializer : ISerializer<double>
       return false;
    }
 
-   public int CalculateByteLength(ref double value)
+   public int CalculateByteLength(scoped in double value)
    {
       return sizeof(double);
    }

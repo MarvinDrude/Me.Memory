@@ -30,7 +30,7 @@ public sealed class Int64Serializer : ISerializer<long>
       return reader.TryReadLittleEndian(out value);
    }
 
-   public int CalculateByteLength(ref long value)
+   public int CalculateByteLength(scoped in long value)
    {
       return sizeof(long);
    }

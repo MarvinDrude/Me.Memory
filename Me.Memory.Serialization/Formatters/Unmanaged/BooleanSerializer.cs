@@ -36,7 +36,7 @@ public sealed class BooleanSerializer : ISerializer<bool>
       return false;
    }
 
-   public int CalculateByteLength(ref bool value)
+   public int CalculateByteLength(scoped in bool value)
    {
       return sizeof(byte);
    }

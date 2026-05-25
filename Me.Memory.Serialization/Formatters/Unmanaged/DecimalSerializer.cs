@@ -58,7 +58,7 @@ public sealed class DecimalSerializer : ISerializer<decimal>
       return false;
    }
 
-   public int CalculateByteLength(ref decimal value)
+   public int CalculateByteLength(scoped in decimal value)
    {
       return sizeof(decimal);
    }

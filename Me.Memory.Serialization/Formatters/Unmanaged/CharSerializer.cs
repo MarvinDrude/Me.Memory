@@ -37,7 +37,7 @@ public sealed class CharSerializer : ISerializer<char>
       return false;
    }
 
-   public int CalculateByteLength(ref char value)
+   public int CalculateByteLength(scoped in char value)
    {
       return sizeof(char);
    }

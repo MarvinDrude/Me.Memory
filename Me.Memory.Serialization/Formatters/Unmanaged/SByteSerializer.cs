@@ -36,7 +36,7 @@ public sealed class SByteSerializer : ISerializer<sbyte>
       return false;
    }
 
-   public int CalculateByteLength(ref sbyte value)
+   public int CalculateByteLength(scoped in sbyte value)
    {
       return sizeof(sbyte);
    }

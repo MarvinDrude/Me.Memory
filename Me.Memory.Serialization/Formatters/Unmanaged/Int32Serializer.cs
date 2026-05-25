@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+using System.Buffers;
 using System.Buffers.Binary;
 using Me.Memory.Buffers;
 using Me.Memory.Extensions;
@@ -30,7 +30,7 @@ public sealed class Int32Serializer : ISerializer<int>
       return reader.TryReadLittleEndian(out value);
    }
 
-   public int CalculateByteLength(ref int value)
+   public int CalculateByteLength(scoped in int value)
    {
       return sizeof(int);
    }

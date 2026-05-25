@@ -37,7 +37,7 @@ public sealed class UInt64Serializer : ISerializer<ulong>
       return false;
    }
 
-   public int CalculateByteLength(ref ulong value)
+   public int CalculateByteLength(scoped in ulong value)
    {
       return sizeof(ulong);
    }

@@ -43,6 +43,7 @@
    <ItemGroup>
      <Folder Include="Attributes\" />
      <Folder Include="Extensions\" />
+     <Folder Include="Formatters\Collections\" />
    </ItemGroup>
 
 </Project>

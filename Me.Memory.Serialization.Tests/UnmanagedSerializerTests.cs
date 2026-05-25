@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using Me.Memory.Buffers;
+using Me.Memory.Serialization.Formatters.System;
 using Me.Memory.Serialization.Formatters.Unmanaged;
 using Me.Memory.Serialization.Interfaces;
 
@@ -33,7 +34,7 @@ public class UnmanagedSerializerTests
       var serializer = new TSerializer();
       
       // 1. Calculate length
-      var length = serializer.CalculateByteLength(ref value);
+      var length = serializer.CalculateByteLength(in value);
       await Assert.That(length).IsEqualTo(expectedSize);
       
       // 2. Write and contiguous read
@@ -184,5 +185,69 @@ public class UnmanagedSerializerTests
    {
       await TestSerializer<Half, HalfSerializer>((Half)1.5f, Unsafe.SizeOf<Half>());
       await TestSerializer<Half, HalfSerializer>((Half)(-3.14f), Unsafe.SizeOf<Half>());
+   }
+
+   [Test]
+   public async Task TestStringSerializer()
+   {
+      await TestString("Hello World", sizeof(int) + 11);
+      await TestString("", sizeof(int) + 0);
+      await TestString(null!, sizeof(int));
+      await TestString("Smiley: \u263A", sizeof(int) + 11);
+   }
+
+   private static async Task TestString(string value, int expectedSize)
+   {
+      var serializer = new StringSerializer();
+      
+      // 1. Calculate length
+      var length = serializer.CalculateByteLength(in value);
+      await Assert.That(length).IsEqualTo(expectedSize);
+      
+      // 2. Write and contiguous read
+      byte[] buffer = new byte[expectedSize];
+      
+      var (written, readSuccess, readValue, remaining) = WriteStringAndReadContiguous(serializer, buffer, value);
+      
+      await Assert.That(written).IsEqualTo(expectedSize);
+      await Assert.That(readSuccess).IsTrue();
+      await Assert.That(readValue).IsEqualTo(value);
+      await Assert.That(remaining).IsEqualTo(0);
+      
+      // 3. Multi-segment read (split the written bytes into 1-byte segments)
+      if (expectedSize > 1)
+      {
+         var (multiReadSuccess, multiReadValue, multiRemaining) = ReadStringMultiSegment(serializer, buffer, expectedSize);
+         await Assert.That(multiReadSuccess).IsTrue();
+         await Assert.That(multiReadValue).IsEqualTo(value);
+         await Assert.That(multiRemaining).IsEqualTo(0);
+      }
+   }
+
+   private static (int written, bool readSuccess, string? readValue, long remaining) WriteStringAndReadContiguous(StringSerializer serializer, byte[] buffer, string value)
+   {
+      var writer = new BufferWriter<byte>(buffer);
+      var written = serializer.Write(ref writer, in value);
+      
+      var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
+      var readSuccess = serializer.TryRead(ref reader, out string? readValue);
+      
+      return (written, readSuccess, readValue, reader.Remaining);
+   }
+
+   private static (bool readSuccess, string? readValue, long remaining) ReadStringMultiSegment(StringSerializer serializer, byte[] buffer, int expectedSize)
+   {
+      BufferSegment<byte> firstSegment = new(new byte[] { buffer[0] });
+      BufferSegment<byte> currentSegment = firstSegment;
+      for (int i = 1; i < expectedSize; i++)
+      {
+         currentSegment = currentSegment.Append(new byte[] { buffer[i] });
+      }
+      
+      var multiSegmentSequence = new ReadOnlySequence<byte>(firstSegment, 0, currentSegment, 1);
+      var multiSegmentReader = new SequenceReader<byte>(multiSegmentSequence);
+      
+      var multiReadSuccess = serializer.TryRead(ref multiSegmentReader, out string? multiReadValue);
+      return (multiReadSuccess, multiReadValue, multiSegmentReader.Remaining);
    }
 }

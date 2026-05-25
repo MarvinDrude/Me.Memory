@@ -38,7 +38,7 @@ public sealed class HalfSerializer : ISerializer<Half>
       return false;
    }
 
-   public int CalculateByteLength(ref Half value)
+   public int CalculateByteLength(scoped in Half value)
    {
       return Unsafe.SizeOf<Half>();
    }

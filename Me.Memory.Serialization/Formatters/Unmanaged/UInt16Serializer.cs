@@ -37,7 +37,7 @@ public sealed class UInt16Serializer : ISerializer<ushort>
       return false;
    }
 
-   public int CalculateByteLength(ref ushort value)
+   public int CalculateByteLength(scoped in ushort value)
    {
       return sizeof(ushort);
    }
