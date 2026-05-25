@@ -12,13 +12,13 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class HalfSerializer : ISerializer<Half>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in Half value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in Half value)
    {
       writer.WriteLittleEndian(value);
       return Unsafe.SizeOf<Half>();
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out Half value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out Half value)
    {
       if (reader.UnreadSpan.Length >= Unsafe.SizeOf<Half>())
       {
@@ -38,7 +38,7 @@ public sealed class HalfSerializer : ISerializer<Half>
       return false;
    }
 
-   public int CalculateByteLength(scoped in Half value)
+   public static int CalculateByteLength(scoped in Half value)
    {
       return Unsafe.SizeOf<Half>();
    }

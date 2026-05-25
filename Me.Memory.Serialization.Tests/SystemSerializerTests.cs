@@ -2,6 +2,7 @@
 
 using System.Buffers;
 using Me.Memory.Buffers;
+using Me.Memory.Serialization;
 using Me.Memory.Serialization.Formatters.System;
 using Me.Memory.Serialization.Interfaces;
 
@@ -10,18 +11,16 @@ namespace Me.Memory.Serialization.Tests;
 public class SystemSerializerTests
 {
    private static async Task TestSerializer<T, TSerializer>(T value, int expectedSize)
-      where TSerializer : ISerializer<T>, new()
+      where TSerializer : ISerializer<T>
    {
-      var serializer = new TSerializer();
-      
       // 1. Calculate length
-      var length = serializer.CalculateByteLength(in value);
+      var length = TSerializer.CalculateByteLength(in value);
       await Assert.That(length).IsEqualTo(expectedSize);
       
       // 2. Write and contiguous read
       byte[] buffer = new byte[expectedSize];
       
-      var (written, readSuccess, readValue, remaining) = WriteAndReadContiguous<T, TSerializer>(serializer, buffer, value);
+      var (written, readSuccess, readValue, remaining) = WriteAndReadContiguous<T, TSerializer>(buffer, value);
       
       await Assert.That(written).IsEqualTo(expectedSize);
       await Assert.That(readSuccess).IsTrue();
@@ -31,7 +30,7 @@ public class SystemSerializerTests
       // 3. Multi-segment read (split the written bytes into 1-byte segments)
       if (expectedSize > 1)
       {
-         var (multiReadSuccess, multiReadValue, multiRemaining) = ReadMultiSegment<T, TSerializer>(serializer, buffer, expectedSize);
+         var (multiReadSuccess, multiReadValue, multiRemaining) = ReadMultiSegment<T, TSerializer>(buffer, expectedSize);
          
          await Assert.That(multiReadSuccess).IsTrue();
          await Assert.That(multiReadValue).IsEqualTo(value);
@@ -39,19 +38,19 @@ public class SystemSerializerTests
       }
    }
 
-   private static (int written, bool readSuccess, T readValue, long remaining) WriteAndReadContiguous<T, TSerializer>(TSerializer serializer, byte[] buffer, T value)
+   private static (int written, bool readSuccess, T readValue, long remaining) WriteAndReadContiguous<T, TSerializer>(byte[] buffer, T value)
       where TSerializer : ISerializer<T>
    {
       var writer = new BufferWriter<byte>(buffer);
-      var written = serializer.Write(ref writer, in value);
+      var written = TSerializer.Write(ref writer, in value);
       
       var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buffer));
-      var readSuccess = serializer.TryRead(ref reader, out T readValue);
+      var readSuccess = TSerializer.TryRead(ref reader, out T readValue);
       
       return (written, readSuccess, readValue, reader.Remaining);
    }
 
-   private static (bool readSuccess, T readValue, long remaining) ReadMultiSegment<T, TSerializer>(TSerializer serializer, byte[] buffer, int expectedSize)
+   private static (bool readSuccess, T readValue, long remaining) ReadMultiSegment<T, TSerializer>(byte[] buffer, int expectedSize)
       where TSerializer : ISerializer<T>
    {
       BufferSegment<byte> firstSegment = new(new byte[] { buffer[0] });
@@ -64,7 +63,7 @@ public class SystemSerializerTests
       var multiSegmentSequence = new ReadOnlySequence<byte>(firstSegment, 0, currentSegment, 1);
       var multiSegmentReader = new SequenceReader<byte>(multiSegmentSequence);
       
-      var multiReadSuccess = serializer.TryRead(ref multiSegmentReader, out T multiReadValue);
+      var multiReadSuccess = TSerializer.TryRead(ref multiSegmentReader, out T multiReadValue);
       return (multiReadSuccess, multiReadValue, multiSegmentReader.Remaining);
    }
 
@@ -120,11 +119,22 @@ public class SystemSerializerTests
       await TestSerializer<TimeOnly, TimeOnlySerializer>(new TimeOnly(14, 30, 15), sizeof(long));
    }
 
-   [Test]
-   public async Task TestDateOnlySerializer()
-   {
-      await TestSerializer<DateOnly, DateOnlySerializer>(DateOnly.MinValue, sizeof(int));
-      await TestSerializer<DateOnly, DateOnlySerializer>(DateOnly.MaxValue, sizeof(int));
-      await TestSerializer<DateOnly, DateOnlySerializer>(new DateOnly(2026, 5, 25), sizeof(int));
-   }
+    [Test]
+    public async Task TestDateOnlySerializer()
+    {
+       await TestSerializer<DateOnly, DateOnlySerializer>(DateOnly.MinValue, sizeof(int));
+       await TestSerializer<DateOnly, DateOnlySerializer>(DateOnly.MaxValue, sizeof(int));
+       await TestSerializer<DateOnly, DateOnlySerializer>(new DateOnly(2026, 5, 25), sizeof(int));
+    }
+
+    [Test]
+    public async Task TestSerializerRegistry()
+    {
+       await Assert.That(SerializerRegistry<int>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<bool>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<string?>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<Guid>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<DateTime>.Instance).IsNotNull();
+       await Assert.That(SerializerRegistry<Uri>.Instance).IsNotNull();
+    }
 }

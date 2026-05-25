@@ -11,13 +11,13 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class DoubleSerializer : ISerializer<double>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in double value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in double value)
    {
       writer.WriteLittleEndian(value);
       return sizeof(double);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out double value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out double value)
    {
       if (reader.UnreadSpan.Length >= sizeof(double))
       {
@@ -37,7 +37,7 @@ public sealed class DoubleSerializer : ISerializer<double>
       return false;
    }
 
-   public int CalculateByteLength(scoped in double value)
+   public static int CalculateByteLength(scoped in double value)
    {
       return sizeof(double);
    }

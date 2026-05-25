@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 
 public sealed class StringSerializer : ISerializer<string?>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in string? value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in string? value)
    {
       if (value is null)
       {
@@ -28,7 +28,7 @@ public sealed class StringSerializer : ISerializer<string?>
       return sizeof(int) + byteCount;
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out string? value)
+   public static bool TryRead(ref SequenceReader<byte> reader, [MaybeNullWhen(false)] out string? value)
    {
       if (!reader.TryReadLittleEndian(out int length))
       {
@@ -69,7 +69,7 @@ public sealed class StringSerializer : ISerializer<string?>
       return true;
    }
 
-   public int CalculateByteLength(scoped in string? value)
+   public static int CalculateByteLength(scoped in string? value)
    {
       if (value is null) return sizeof(int);
       return sizeof(int) + Encoding.UTF8.GetByteCount(value);

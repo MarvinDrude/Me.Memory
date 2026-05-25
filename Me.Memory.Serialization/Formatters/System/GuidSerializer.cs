@@ -9,7 +9,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// </summary>
 public sealed class GuidSerializer : ISerializer<Guid>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in Guid value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in Guid value)
    {
       var span = writer.AcquireSpan(16);
       value.TryWriteBytes(span);
@@ -17,7 +17,7 @@ public sealed class GuidSerializer : ISerializer<Guid>
       return 16;
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out Guid value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out Guid value)
    {
       if (reader.UnreadSpan.Length >= 16)
       {
@@ -31,18 +31,17 @@ public sealed class GuidSerializer : ISerializer<Guid>
       {
          Span<byte> bytes = stackalloc byte[16];
          reader.UnreadSequence.Slice(0, 16).CopyTo(bytes);
-         
          value = new Guid(bytes);
          reader.Advance(16);
          
          return true;
       }
 
-      value = Guid.Empty;
+      value = default;
       return false;
    }
 
-   public int CalculateByteLength(scoped in Guid value)
+   public static int CalculateByteLength(scoped in Guid value)
    {
       return 16;
    }

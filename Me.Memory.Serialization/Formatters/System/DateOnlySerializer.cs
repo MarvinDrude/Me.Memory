@@ -11,20 +11,20 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// </summary>
 public sealed class DateOnlySerializer : ISerializer<DateOnly>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in DateOnly value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in DateOnly value)
    {
       writer.WriteLittleEndian(value.DayNumber);
       return sizeof(int);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out DateOnly value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out DateOnly value)
    {
       if (reader.UnreadSpan.Length >= sizeof(int))
       {
          var dayNumber = BinaryPrimitives.ReadInt32LittleEndian(reader.UnreadSpan);
          reader.Advance(sizeof(int));
-         
          value = DateOnly.FromDayNumber(dayNumber);
+         
          return true;
       }
       
@@ -38,7 +38,7 @@ public sealed class DateOnlySerializer : ISerializer<DateOnly>
       return false;
    }
 
-   public int CalculateByteLength(scoped in DateOnly value)
+   public static int CalculateByteLength(scoped in DateOnly value)
    {
       return sizeof(int);
    }

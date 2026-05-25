@@ -11,7 +11,7 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// </summary>
 public sealed class UriSerializer : ISerializer<Uri>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in Uri value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in Uri value)
    {
       ArgumentNullException.ThrowIfNull(value);
 
@@ -25,7 +25,7 @@ public sealed class UriSerializer : ISerializer<Uri>
       return sizeof(int) + byteCount;
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out Uri value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out Uri value)
    {
       if (!reader.TryReadLittleEndian(out int length))
       {
@@ -66,7 +66,7 @@ public sealed class UriSerializer : ISerializer<Uri>
       return true;
    }
 
-   public int CalculateByteLength(scoped in Uri value)
+   public static int CalculateByteLength(scoped in Uri value)
    {
       ArgumentNullException.ThrowIfNull(value);
       return sizeof(int) + Encoding.UTF8.GetByteCount(value.OriginalString);

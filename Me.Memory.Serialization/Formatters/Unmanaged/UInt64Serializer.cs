@@ -11,13 +11,13 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class UInt64Serializer : ISerializer<ulong>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in ulong value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in ulong value)
    {
       writer.WriteLittleEndian(value);
       return sizeof(ulong);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out ulong value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out ulong value)
    {
       if (reader.UnreadSpan.Length >= sizeof(ulong))
       {
@@ -37,7 +37,7 @@ public sealed class UInt64Serializer : ISerializer<ulong>
       return false;
    }
 
-   public int CalculateByteLength(scoped in ulong value)
+   public static int CalculateByteLength(scoped in ulong value)
    {
       return sizeof(ulong);
    }

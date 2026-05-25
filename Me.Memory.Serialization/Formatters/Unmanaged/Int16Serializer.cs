@@ -11,13 +11,13 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class Int16Serializer : ISerializer<short>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in short value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in short value)
    {
       writer.WriteLittleEndian(value);
       return sizeof(short);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out short value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out short value)
    {
       if (reader.UnreadSpan.Length >= sizeof(short))
       {
@@ -30,7 +30,7 @@ public sealed class Int16Serializer : ISerializer<short>
       return reader.TryReadLittleEndian(out value);
    }
 
-   public int CalculateByteLength(scoped in short value)
+   public static int CalculateByteLength(scoped in short value)
    {
       return sizeof(short);
    }

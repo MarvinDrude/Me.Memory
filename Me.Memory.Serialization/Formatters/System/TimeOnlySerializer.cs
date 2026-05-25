@@ -11,13 +11,13 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// </summary>
 public sealed class TimeOnlySerializer : ISerializer<TimeOnly>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in TimeOnly value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in TimeOnly value)
    {
       writer.WriteLittleEndian(value.Ticks);
       return sizeof(long);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out TimeOnly value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out TimeOnly value)
    {
       if (reader.UnreadSpan.Length >= sizeof(long))
       {
@@ -38,7 +38,7 @@ public sealed class TimeOnlySerializer : ISerializer<TimeOnly>
       return false;
    }
 
-   public int CalculateByteLength(scoped in TimeOnly value)
+   public static int CalculateByteLength(scoped in TimeOnly value)
    {
       return sizeof(long);
    }

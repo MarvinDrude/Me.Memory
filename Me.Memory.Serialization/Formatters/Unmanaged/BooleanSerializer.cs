@@ -10,13 +10,13 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class BooleanSerializer : ISerializer<bool>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in bool value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in bool value)
    {
       writer.WriteLittleEndian((byte)(value ? 1 : 0));
       return sizeof(bool);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out bool value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out bool value)
    {
       if (reader.UnreadSpan.Length >= sizeof(byte))
       {
@@ -36,7 +36,7 @@ public sealed class BooleanSerializer : ISerializer<bool>
       return false;
    }
 
-   public int CalculateByteLength(scoped in bool value)
+   public static int CalculateByteLength(scoped in bool value)
    {
       return sizeof(byte);
    }

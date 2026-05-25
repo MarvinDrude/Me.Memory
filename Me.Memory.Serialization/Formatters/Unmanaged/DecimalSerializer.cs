@@ -11,7 +11,7 @@ namespace Me.Memory.Serialization.Formatters.Unmanaged;
 /// </summary>
 public sealed class DecimalSerializer : ISerializer<decimal>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in decimal value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in decimal value)
    {
       var span = writer.AcquireSpan(sizeof(decimal));
       
@@ -26,7 +26,7 @@ public sealed class DecimalSerializer : ISerializer<decimal>
       return sizeof(decimal);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out decimal value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out decimal value)
    {
       if (reader.UnreadSpan.Length >= sizeof(decimal))
       {
@@ -58,7 +58,7 @@ public sealed class DecimalSerializer : ISerializer<decimal>
       return false;
    }
 
-   public int CalculateByteLength(scoped in decimal value)
+   public static int CalculateByteLength(scoped in decimal value)
    {
       return sizeof(decimal);
    }

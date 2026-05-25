@@ -11,13 +11,13 @@ namespace Me.Memory.Serialization.Formatters.System;
 /// </summary>
 public sealed class TimeSpanSerializer : ISerializer<TimeSpan>
 {
-   public int Write(ref BufferWriter<byte> writer, scoped in TimeSpan value)
+   public static int Write(ref BufferWriter<byte> writer, scoped in TimeSpan value)
    {
       writer.WriteLittleEndian(value.Ticks);
       return sizeof(long);
    }
 
-   public bool TryRead(ref SequenceReader<byte> reader, out TimeSpan value)
+   public static bool TryRead(ref SequenceReader<byte> reader, out TimeSpan value)
    {
       if (reader.UnreadSpan.Length >= sizeof(long))
       {
@@ -34,11 +34,11 @@ public sealed class TimeSpanSerializer : ISerializer<TimeSpan>
          return true;
       }
 
-      value = TimeSpan.Zero;
+      value = default;
       return false;
    }
 
-   public int CalculateByteLength(scoped in TimeSpan value)
+   public static int CalculateByteLength(scoped in TimeSpan value)
    {
       return sizeof(long);
    }
