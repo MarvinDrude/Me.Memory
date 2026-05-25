@@ -12,7 +12,9 @@ public sealed partial class SerializerGenerator
 {
    private static string GenerateSerializerSource(INamedTypeSymbol typeSymbol)
    {
-      var ns = typeSymbol.ContainingNamespace.ToDisplayString();
+      var ns = typeSymbol.ContainingNamespace.IsGlobalNamespace
+         ? ""
+         : typeSymbol.ContainingNamespace.ToDisplayString();
       var typeName = typeSymbol.Name;
       var isReferenceType = typeSymbol.IsReferenceType;
       var isAbstract = typeSymbol.IsAbstract;
@@ -37,7 +39,10 @@ public sealed partial class SerializerGenerator
          writer.WriteUsing("Me.Memory.Serialization.Interfaces");
          writer.WriteLine();
 
-         writer.WriteNamespace(ns);
+         if (!string.IsNullOrEmpty(ns))
+         {
+            writer.WriteNamespace(ns);
+         }
 
          writer.WriteText($"public abstract class {typeName}Serializer : ISerializer<{typeNameWithNullability}>");
          writer.WriteLine();

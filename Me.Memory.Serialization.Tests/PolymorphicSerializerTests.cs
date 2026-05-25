@@ -53,38 +53,6 @@ public class DerivedB : BaseTestClass
    public string? ValueB { get; set; }
 }
 
-public static class TestInitializer
-{
-   [ModuleInitializer]
-   public static void Initialize()
-   {
-      // Register SimpleTestClass
-      SerializerRegistry<SimpleTestClass?>.Write = SimpleTestClassSerializer.Write;
-      SerializerRegistry<SimpleTestClass?>.TryRead = SimpleTestClassSerializer.TryRead;
-      SerializerRegistry<SimpleTestClass?>.CalculateByteLength = SimpleTestClassSerializer.CalculateByteLength;
-
-      // Register SimpleTestStruct
-      SerializerRegistry<SimpleTestStruct>.Write = SimpleTestStructSerializer.Write;
-      SerializerRegistry<SimpleTestStruct>.TryRead = SimpleTestStructSerializer.TryRead;
-      SerializerRegistry<SimpleTestStruct>.CalculateByteLength = SimpleTestStructSerializer.CalculateByteLength;
-
-      // Register BaseTestClass
-      SerializerRegistry<BaseTestClass?>.Write = BaseTestClassSerializer.Write;
-      SerializerRegistry<BaseTestClass?>.TryRead = BaseTestClassSerializer.TryRead;
-      SerializerRegistry<BaseTestClass?>.CalculateByteLength = BaseTestClassSerializer.CalculateByteLength;
-
-      // Register DerivedA
-      SerializerRegistry<DerivedA?>.Write = DerivedASerializer.Write;
-      SerializerRegistry<DerivedA?>.TryRead = DerivedASerializer.TryRead;
-      SerializerRegistry<DerivedA?>.CalculateByteLength = DerivedASerializer.CalculateByteLength;
-
-      // Register DerivedB
-      SerializerRegistry<DerivedB?>.Write = DerivedBSerializer.Write;
-      SerializerRegistry<DerivedB?>.TryRead = DerivedBSerializer.TryRead;
-      SerializerRegistry<DerivedB?>.CalculateByteLength = DerivedBSerializer.CalculateByteLength;
-   }
-}
-
 public class PolymorphicSerializerTests
 {
    private static async Task TestSerializerDirect<T, TSerializer>(T value, int expectedSize, Func<T, T, Task> assertEqual)
