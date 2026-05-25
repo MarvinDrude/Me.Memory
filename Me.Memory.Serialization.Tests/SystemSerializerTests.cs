@@ -145,24 +145,17 @@ public class SystemSerializerTests
     [Test]
     public async Task TestArraySerializer()
     {
+       // 1. Test regular array
        int[] intValues = [10, 20, 30, 40, 50];
        int expectedSize = sizeof(int) + (sizeof(int) * intValues.Length); // 4 + 4*5 = 24
-       
-       byte[] buffer = new byte[expectedSize];
-       var writer = new BufferWriter<byte>(buffer);
-       ArraySerializer<int>.Write(ref writer, intValues);
-       
-       var (readSuccess, readValue, remaining) = ReadContiguous(buffer);
-       Console.WriteLine($"DEBUG: readSuccess={readSuccess}, remaining={remaining}, elements=[{string.Join(", ", readValue ?? [])}]");
-
        await TestArray(intValues, expectedSize);
 
-       // Also test a null array
+       // 2. Test null array
        int[]? nullArray = null;
        int expectedNullSize = sizeof(int); // 4 bytes for -1
        await TestArray(nullArray, expectedNullSize);
 
-       // Also test empty array
+       // 3. Test empty array
        int[] emptyArray = [];
        int expectedEmptySize = sizeof(int); // 4 bytes for 0
        await TestArray(emptyArray, expectedEmptySize);
@@ -171,14 +164,14 @@ public class SystemSerializerTests
     private static async Task TestArray(int[]? value, int expectedSize)
     {
        // 1. Calculate length
-       var length = ArraySerializer<int>.CalculateByteLength(in value!);
+       var length = ArraySerializer<int>.CalculateByteLength(in value);
        await Assert.That(length).IsEqualTo(expectedSize);
        
        // 2. Write and contiguous read
        byte[] buffer = new byte[expectedSize];
        
        var writer = new BufferWriter<byte>(buffer);
-       var written = ArraySerializer<int>.Write(ref writer, in value!);
+       var written = ArraySerializer<int>.Write(ref writer, in value);
        
        var (readSuccess, readValue, remaining) = ReadContiguous(buffer);
        
@@ -193,10 +186,13 @@ public class SystemSerializerTests
        else
        {
           await Assert.That(readValue).IsNotNull();
-          await Assert.That(readValue!.Length).IsEqualTo(value.Length);
-          for (int i = 0; i < value.Length; i++)
+          if (readValue is not null)
           {
-             await Assert.That(readValue[i]).IsEqualTo(value[i]);
+             await Assert.That(readValue.Length).IsEqualTo(value.Length);
+             for (int i = 0; i < value.Length; i++)
+             {
+                await Assert.That(readValue[i]).IsEqualTo(value[i]);
+             }
           }
        }
        
@@ -223,10 +219,13 @@ public class SystemSerializerTests
           else
           {
              await Assert.That(multiReadValue).IsNotNull();
-             await Assert.That(multiReadValue!.Length).IsEqualTo(value.Length);
-             for (int i = 0; i < value.Length; i++)
+             if (multiReadValue is not null)
              {
-                await Assert.That(multiReadValue[i]).IsEqualTo(value[i]);
+                await Assert.That(multiReadValue.Length).IsEqualTo(value.Length);
+                for (int i = 0; i < value.Length; i++)
+                {
+                   await Assert.That(multiReadValue[i]).IsEqualTo(value[i]);
+                }
              }
           }
        }

@@ -190,11 +190,11 @@ public class UnmanagedSerializerTests
    {
       await TestString("Hello World", sizeof(int) + 11);
       await TestString("", sizeof(int) + 0);
-      await TestString(null!, sizeof(int));
+      await TestString(null, sizeof(int));
       await TestString("Smiley: \u263A", sizeof(int) + 11);
    }
 
-    private static async Task TestString(string value, int expectedSize)
+    private static async Task TestString(string? value, int expectedSize)
     {
        // 1. Calculate length
        var length = StringSerializer.CalculateByteLength(in value);
@@ -220,7 +220,7 @@ public class UnmanagedSerializerTests
        }
     }
 
-    private static (int written, bool readSuccess, string? readValue, long remaining) WriteStringAndReadContiguous(byte[] buffer, string value)
+    private static (int written, bool readSuccess, string? readValue, long remaining) WriteStringAndReadContiguous(byte[] buffer, string? value)
     {
        var writer = new BufferWriter<byte>(buffer);
        var written = StringSerializer.Write(ref writer, in value);

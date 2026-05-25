@@ -6,7 +6,7 @@ namespace Me.Memory.Extensions;
 
 public static class BufferWriterByteExtensions
 {
-   extension(BufferWriter<byte> writer)
+   extension(ref BufferWriter<byte> writer)
    {
       public T ReadBigEndian<T>(out int read, bool movePosition = false)
          where T : unmanaged
