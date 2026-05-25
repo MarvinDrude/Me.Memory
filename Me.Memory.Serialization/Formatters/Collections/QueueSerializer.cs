@@ -1,0 +1,86 @@
+using System.Buffers;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using Me.Memory.Buffers;
+using Me.Memory.Serialization.Interfaces;
+
+namespace Me.Memory.Serialization.Formatters.Collections;
+
+/// <summary>
+/// Serializer for Queue values.
+/// </summary>
+public abstract class QueueSerializer<T> : ISerializer<Queue<T>?>
+{
+   public static int Write(ref BufferWriter<byte> writer, scoped in Queue<T>? value)
+   {
+      if (value is null)
+      {
+         var lengthSpan = writer.AcquireSpan(sizeof(int));
+         BinaryPrimitives.WriteInt32LittleEndian(lengthSpan, -1);
+         
+         return sizeof(int);
+      }
+
+      var writeElement = SerializerRegistry<T>.GetWrite();
+      var lengthSpanNotNil = writer.AcquireSpan(sizeof(int));
+      BinaryPrimitives.WriteInt32LittleEndian(lengthSpanNotNil, value.Count);
+
+      var written = sizeof(int);
+      foreach (var item in value)
+      {
+         written += writeElement(ref writer, item);
+      }
+
+      return written;
+   }
+
+   public static bool TryRead(ref SequenceReader<byte> reader, out Queue<T>? value)
+   {
+      if (!reader.TryReadLittleEndian(out int length))
+      {
+         value = null;
+         return false;
+      }
+
+      if (length < 0)
+      {
+         value = null;
+         return true;
+      }
+
+      var tryReadElement = SerializerRegistry<T>.GetTryRead();
+      var queue = new Queue<T>(length);
+
+      for (var i = 0; i < length; i++)
+      {
+         if (!tryReadElement(ref reader, out var element))
+         {
+            value = null;
+            return false;
+         }
+         
+         queue.Enqueue(element);
+      }
+
+      value = queue;
+      return true;
+   }
+
+   public static int CalculateByteLength(scoped in Queue<T>? value)
+   {
+      if (value is null)
+      {
+         return sizeof(int);
+      }
+
+      var calculateElement = SerializerRegistry<T>.GetCalculateByteLength();
+      var length = sizeof(int);
+      
+      foreach (var item in value)
+      {
+         length += calculateElement(item);
+      }
+
+      return length;
+   }
+}

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
    <PropertyGroup>
-      <RootNamespace>Me.Memory.Tests</RootNamespace>
+      <RootNamespace>Me.Memory.Serialization.Tests</RootNamespace>
    </PropertyGroup>
 
    <ItemGroup>

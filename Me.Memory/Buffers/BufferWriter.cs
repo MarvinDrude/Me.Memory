@@ -207,7 +207,7 @@ public ref partial struct BufferWriter<T> : IDisposable
          : _memoryOwner;
    }
    
-   private void Resize(int requestedSize)
+   internal void Resize(int requestedSize)
    {
       int newSize;
       var currentLength = _isGrown ? _memoryOwner.Length : _initalSpanOwner.Length;

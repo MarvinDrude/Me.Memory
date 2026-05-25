@@ -1,9 +1,19 @@
-﻿<Solution>
-  <Folder Name="/Generators/" />
+<Solution>
+  <Folder Name="/Additional Files/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="NuGet.Config" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="Me.Experiments\Me.Experiments.csproj" />
   <Project Path="Me.Memory.Benchmarks\Me.Memory.Benchmarks.csproj" />
   <Project Path="Me.Memory.Embedded.Generator/Me.Memory.Embedded.Generator.csproj" />
   <Project Path="Me.Memory.Embedded.Packer/Me.Memory.Embedded.Packer.csproj" />
+  <Project Path="Me.Memory.Serialization.Generator/Me.Memory.Serialization.Generator.csproj" />
+  <Project Path="Me.Memory.Serialization/Me.Memory.Serialization.csproj" />
+  <Project Path="Me.Memory.Serialization.Tests/Me.Memory.Serialization.Tests.csproj" />
   <Project Path="Me.Memory.Tests\Me.Memory.Tests.csproj" />
   <Project Path="Me.Memory\Me.Memory.csproj" />
 </Solution>

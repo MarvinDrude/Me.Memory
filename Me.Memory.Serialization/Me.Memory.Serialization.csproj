@@ -3,12 +3,12 @@
    <PropertyGroup>
       <IsPackable>true</IsPackable>
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <RootNamespace>Me.Memory</RootNamespace>
+      <RootNamespace>Me.Memory.Serialization</RootNamespace>
    </PropertyGroup>
 
    <PropertyGroup>
-      <Title>Me.Memory</Title>
-      <Description>Internal Use.</Description>
+      <Title>Me.Memory.Serialization</Title>
+      <Description>Serialization Component for Me.Memory.</Description>
       <Authors>Marvin Drude</Authors>
       <PackageLicenseExpression>MIT</PackageLicenseExpression>
       <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -25,7 +25,24 @@
 
    <ItemGroup>
       <InternalsVisibleTo Include="Me.Memory.Tests" />
+      <InternalsVisibleTo Include="Me.Memory.Serialization.Tests" />
       <None Include="../README.md" Pack="true" PackagePath="\"/>
+   </ItemGroup>
+
+   <ItemGroup>
+      <ProjectReference Include="..\Me.Memory\Me.Memory.csproj" />
+      <ProjectReference Include="..\Me.Memory.Serialization.Generator\Me.Memory.Serialization.Generator.csproj"
+                        OutputItemType="Analyzer"
+                        Pack="true"
+                        ReferenceOutputAssembly="false"
+                        PackagePath="analyzers/dotnet/cs" />
+   </ItemGroup>
+   
+   <ItemGroup>
+      <None Include="..\Me.Memory.Serialization.Generator\bin\$(Configuration)\$(TargetFramework)\Me.Memory.Serialization.Generator.dll"
+            Pack="true"
+            PackagePath="analyzers/dotnet/cs"
+            Visible="true" />
    </ItemGroup>
 
    <ItemGroup>

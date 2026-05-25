@@ -58,7 +58,15 @@ public ref struct ByteWriter : IDisposable
       var size = Unsafe.SizeOf<T>();
       var span = AcquireSpan(size);
 
-      value.WriteBigEndian(span);
+      if (!BitConverter.IsLittleEndian)
+      {
+         Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(span), value);
+      }
+      else
+      {
+         value.WriteBigEndian(span);
+      }
+      
       return size;
    }
    
@@ -68,8 +76,16 @@ public ref struct ByteWriter : IDisposable
    {
       var size = Unsafe.SizeOf<T>();
       var span = AcquireSpan(size);
-
-      value.WriteLittleEndian(span);
+      
+      if (BitConverter.IsLittleEndian)
+      {
+         Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(span), value);
+      }
+      else
+      {
+         value.WriteLittleEndian(span);
+      }
+      
       return size;
    }
    

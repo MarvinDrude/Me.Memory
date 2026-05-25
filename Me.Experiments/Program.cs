@@ -1,56 +1,47 @@
-﻿
 using System.Runtime.InteropServices;
 using Me.Memory.Buffers;
 using Me.Memory.Buffers.Spans;
 using Me.Memory.Collections;
 using Me.Memory.Extensions;
 using Me.Memory.Pools;
+using Me.Memory.Serialization;
+using Me.Memory.Serialization.Attributes;
 using Me.Memory.Services;
 using Me.Memory.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
-var result = new AsyncTimerResult();
-using (new AsyncTimer(result))
+Console.WriteLine("Hello World!");
+
+var bytes = MeSerializer.SerializeWithoutPrecalculation(new TestStruct()
 {
-   await Task.Delay(200);
-}
+   Value = 200,
+   Next = new TestStruct2()
+   {
+      Value2 = 100
+   }
+}, 256);
+var deserialized = MeSerializer.Deserialize<TestStruct>(bytes);
 
-var time = TimeSpan.Zero;
-using (new StackTimer(ref time))
+Console.WriteLine(deserialized);
+
+return;
+
+[GenerateSerializer]
+public struct TestStruct
 {
-   Thread.Sleep(300);
+   [SerializerPosition(0)]
+   public int Value { get; set; }
+   
+   [SerializerPosition(1)]
+   public int ValueIn { get; set; }
+      
+   [SerializerPosition(2)]
+   public TestStruct2 Next { get; set; }
 }
-
-var times = 0L;
-using (new StackTimer(ref times))
+   
+[GenerateSerializer]
+public struct TestStruct2
 {
-   Thread.Sleep(400);
+   [SerializerPosition(0)]
+   public int Value2 { get; set; }
 }
-
-
-Console.WriteLine("Hello World! " + result.Elapsed.TotalMilliseconds);
-Console.WriteLine("Hello World! " + time.TotalMilliseconds);
-Console.WriteLine("Hello World! " + new TimeSpan(times).TotalMilliseconds);
-
-// var coll = new ServiceCollection();
-// coll.AddSingleton<A>();
-// coll.AddSingleton<B>();
-// var provider = coll.BuildServiceProvider();
-//
-// if (provider.TryGetServices<A, B>(out var a, out var b))
-// {
-//    Console.WriteLine(a.Name);
-//    Console.WriteLine(b.Name);
-// }
-//
-//
-//
-// public class A
-// {
-//    public string Name => "a";
-// }
-//
-// public class B
-// {
-//    public string Name => "b";
-// }
