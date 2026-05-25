@@ -1,4 +1,4 @@
-﻿
+
 using System.Runtime.InteropServices;
 using Me.Memory.Buffers;
 using Me.Memory.Buffers.Spans;
