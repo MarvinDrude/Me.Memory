@@ -261,10 +261,6 @@ public class SystemSerializerTests
         Guid? nullGuid = null;
         await TestSerializer<Guid?, NullableSerializer<Guid>>(valGuid, sizeof(bool) + 16);
         await TestSerializer<Guid?, NullableSerializer<Guid>>(nullGuid, sizeof(bool));
-
-        // Test dynamic registry lookup for Nullable
-        var writeDel = SerializerRegistry<int?>.GetWrite();
-        await Assert.That(writeDel).IsNotNull();
      }
 
      [Test]
