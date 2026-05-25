@@ -27,7 +27,8 @@
 
    <ItemGroup>
       <None Include="../README.md" Pack="true" PackagePath="\"/>
-      <PackageReference Include="Beskar.CodeGeneration.Extensions" />
+      <PackageReference Include="Beskar.CodeGeneration.Extensions" PrivateAssets="all" GeneratePathProperty="true" />
+      <PackageReference Include="Me.Memory" PrivateAssets="all" GeneratePathProperty="true" />
       <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
          <PrivateAssets>all</PrivateAssets>
          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -36,6 +37,7 @@
    </ItemGroup>
 
    <PropertyGroup>
+      <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
       <GetCustomStaticAssetsTargets>$(GetCustomStaticAssetsTargets);GetDependencyTargetPaths</GetCustomStaticAssetsTargets>
    </PropertyGroup>
    <Target Name="GetDependencyTargetPaths">
@@ -48,6 +50,8 @@
                Pack="true"
                PackagePath="analyzers/dotnet/cs"
                Visible="false" />
+         <TargetPathWithTargetPlatformMoniker Include="$(PkgBeskar_CodeGeneration_Extensions)\lib\$(TargetFramework)\Beskar.CodeGeneration.Extensions.dll" IncludeRuntimeDependency="false" />
+         <TargetPathWithTargetPlatformMoniker Include="$(PkgMe_Memory)\lib\$(TargetFramework)\Me.Memory.dll" IncludeRuntimeDependency="false" />
       </ItemGroup>
    </Target>
 
