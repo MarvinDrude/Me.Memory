@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
    <PropertyGroup>
       <RootNamespace>Me.Memory.Tests</RootNamespace>
@@ -10,6 +10,10 @@
 
    <ItemGroup>
      <ProjectReference Include="..\Me.Memory\Me.Memory.csproj" />
+     <ProjectReference Include="..\Me.Memory.Serialization\Me.Memory.Serialization.csproj" />
+     <ProjectReference Include="..\Me.Memory.Serialization.Generator\Me.Memory.Serialization.Generator.csproj" 
+                       OutputItemType="Analyzer" 
+                       ReferenceOutputAssembly="false" />
    </ItemGroup>
 
 </Project>

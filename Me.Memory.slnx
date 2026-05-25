@@ -1,9 +1,11 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/Generators/" />
   <Project Path="Me.Experiments\Me.Experiments.csproj" />
   <Project Path="Me.Memory.Benchmarks\Me.Memory.Benchmarks.csproj" />
   <Project Path="Me.Memory.Embedded.Generator/Me.Memory.Embedded.Generator.csproj" />
   <Project Path="Me.Memory.Embedded.Packer/Me.Memory.Embedded.Packer.csproj" />
+  <Project Path="Me.Memory.Serialization.Generator/Me.Memory.Serialization.Generator.csproj" />
+  <Project Path="Me.Memory.Serialization/Me.Memory.Serialization.csproj" />
   <Project Path="Me.Memory.Tests\Me.Memory.Tests.csproj" />
   <Project Path="Me.Memory\Me.Memory.csproj" />
 </Solution>
