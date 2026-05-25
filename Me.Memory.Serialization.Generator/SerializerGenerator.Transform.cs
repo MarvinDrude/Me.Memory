@@ -54,10 +54,23 @@ public sealed partial class SerializerGenerator
       var sortedProperties = CollectPositionedProperties(typeSymbol);
       var unions = CollectUnions(typeSymbol);
 
-      var properties = new SequenceArray<PropertyInfo>(sortedProperties.Select(prop => new PropertyInfo(
-         prop.Name,
-         prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
-      )).ToArray());
+      var properties = new SequenceArray<PropertyInfo>(sortedProperties.Select(prop => {
+         var customSerializerAttr = prop.GetAttributes().FirstOrDefault(a => 
+            a.AttributeClass?.ToDisplayString() == UseSerializerAttributeFullName);
+         
+         string? customSerializerName = null;
+         if (customSerializerAttr is not null && customSerializerAttr.ConstructorArguments.Length > 0 
+            && customSerializerAttr.ConstructorArguments[0].Value is ITypeSymbol serializerTypeSymbol)
+         {
+            customSerializerName = serializerTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+         }
+
+         return new PropertyInfo(
+            prop.Name,
+            prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            customSerializerName
+         );
+      }).ToArray());
 
       var unionInfos = new SequenceArray<UnionInfo>(unions.Select(u => new UnionInfo(
          u.Tag,

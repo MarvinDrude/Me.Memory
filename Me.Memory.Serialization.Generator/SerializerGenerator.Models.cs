@@ -2,7 +2,7 @@ using Me.Memory.Collections;
 
 namespace Me.Memory.Serialization.Generator;
 
-public sealed record PropertyInfo(string Name, string TypeFullyQualifiedName);
+public sealed record PropertyInfo(string Name, string TypeFullyQualifiedName, string? CustomSerializerFullyQualifiedName = null);
 
 public sealed record UnionInfo(int Tag, string TypeFullyQualifiedName);
 

@@ -139,7 +139,11 @@ public sealed partial class SerializerGenerator
                foreach (var prop in sortedProperties)
                {
                   var propType = prop.TypeFullyQualifiedName;
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  if (prop.CustomSerializerFullyQualifiedName is not null)
+                  {
+                     writer.WriteLineInterpolated($"written += {prop.CustomSerializerFullyQualifiedName}.Write(ref writer, value.{prop.Name});");
+                  }
+                  else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
                   }
@@ -172,7 +176,11 @@ public sealed partial class SerializerGenerator
             foreach (var prop in sortedProperties)
             {
                var propType = prop.TypeFullyQualifiedName;
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               if (prop.CustomSerializerFullyQualifiedName is not null)
+               {
+                  writer.WriteLineInterpolated($"written += {prop.CustomSerializerFullyQualifiedName}.Write(ref writer, value.{prop.Name});");
+               }
+               else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
                }
@@ -191,7 +199,11 @@ public sealed partial class SerializerGenerator
          foreach (var prop in sortedProperties)
          {
             var propType = prop.TypeFullyQualifiedName;
-            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            if (prop.CustomSerializerFullyQualifiedName is not null)
+            {
+               writer.WriteLineInterpolated($"written += {prop.CustomSerializerFullyQualifiedName}.Write(ref writer, value.{prop.Name});");
+            }
+            else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"written += write_{varName}(ref writer, value.{prop.Name});");
             }
@@ -265,7 +277,11 @@ public sealed partial class SerializerGenerator
                {
                   var prop = sortedProperties.Array[i];
                   var propType = prop.TypeFullyQualifiedName;
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  if (prop.CustomSerializerFullyQualifiedName is not null)
+                  {
+                     writer.WriteLineInterpolated($"if (!{prop.CustomSerializerFullyQualifiedName}.TryRead(ref reader, out var prop_{i}))");
+                  }
+                  else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
                   }
@@ -320,7 +336,11 @@ public sealed partial class SerializerGenerator
             {
                var prop = sortedProperties.Array[i];
                var propType = prop.TypeFullyQualifiedName;
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               if (prop.CustomSerializerFullyQualifiedName is not null)
+               {
+                  writer.WriteLineInterpolated($"if (!{prop.CustomSerializerFullyQualifiedName}.TryRead(ref reader, out var prop_{i}))");
+               }
+               else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
                }
@@ -353,7 +373,11 @@ public sealed partial class SerializerGenerator
          {
             var prop = sortedProperties.Array[i];
             var propType = prop.TypeFullyQualifiedName;
-            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            if (prop.CustomSerializerFullyQualifiedName is not null)
+            {
+               writer.WriteLineInterpolated($"if (!{prop.CustomSerializerFullyQualifiedName}.TryRead(ref reader, out var prop_{i}))");
+            }
+            else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"if (!tryRead_{varName}(ref reader, out var prop_{i}))");
             }
@@ -428,7 +452,11 @@ public sealed partial class SerializerGenerator
                foreach (var prop in sortedProperties)
                {
                   var propType = prop.TypeFullyQualifiedName;
-                  if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+                  if (prop.CustomSerializerFullyQualifiedName is not null)
+                  {
+                     writer.WriteLineInterpolated($"length += {prop.CustomSerializerFullyQualifiedName}.CalculateByteLength(value.{prop.Name});");
+                  }
+                  else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                   {
                      writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
                   }
@@ -457,7 +485,11 @@ public sealed partial class SerializerGenerator
             foreach (var prop in sortedProperties)
             {
                var propType = prop.TypeFullyQualifiedName;
-               if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+               if (prop.CustomSerializerFullyQualifiedName is not null)
+               {
+                  writer.WriteLineInterpolated($"length += {prop.CustomSerializerFullyQualifiedName}.CalculateByteLength(value.{prop.Name});");
+               }
+               else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
                {
                   writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
                }
@@ -476,7 +508,11 @@ public sealed partial class SerializerGenerator
          foreach (var prop in sortedProperties)
          {
             var propType = prop.TypeFullyQualifiedName;
-            if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
+            if (prop.CustomSerializerFullyQualifiedName is not null)
+            {
+               writer.WriteLineInterpolated($"length += {prop.CustomSerializerFullyQualifiedName}.CalculateByteLength(value.{prop.Name});");
+            }
+            else if (duplicateTypeVarNames.TryGetValue(propType, out var varName))
             {
                writer.WriteLineInterpolated($"length += calculate_{varName}(value.{prop.Name});");
             }

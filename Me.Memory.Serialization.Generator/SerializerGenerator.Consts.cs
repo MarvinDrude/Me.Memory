@@ -6,6 +6,7 @@ public sealed partial class SerializerGenerator
    private const string SerializerPositionAttributeFullName = "Me.Memory.Serialization.Attributes.SerializerPositionAttribute";
    private const string SerializerUnionAttributeFullName = "Me.Memory.Serialization.Attributes.SerializerUnionAttribute";
    private const string SerializerIgnoreAttributeFullName = "Me.Memory.Serialization.Attributes.SerializerIgnoreAttribute";
+   private const string UseSerializerAttributeFullName = "Me.Memory.Serialization.Attributes.UseSerializerAttribute";
 
    private const string DiagnosticId = "MEMGEN001";
    private const string DiagnosticTitle = "Failed to generate serializer";

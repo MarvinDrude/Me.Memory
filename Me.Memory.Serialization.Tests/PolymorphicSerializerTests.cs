@@ -34,6 +34,54 @@ public class IgnoreTestClass
    public bool Flag { get; set; }
 }
 
+public abstract class ReverseStringSerializer : ISerializer<string?>
+{
+   public static int Write(ref BufferWriter<byte> writer, scoped in string? value)
+   {
+      if (value is null)
+      {
+         return Me.Memory.Serialization.Formatters.System.StringSerializer.Write(ref writer, null);
+      }
+      char[] charArray = value.ToCharArray();
+      Array.Reverse(charArray);
+      return Me.Memory.Serialization.Formatters.System.StringSerializer.Write(ref writer, new string(charArray));
+   }
+
+   public static bool TryRead(ref SequenceReader<byte> reader, out string? value)
+   {
+      if (!Me.Memory.Serialization.Formatters.System.StringSerializer.TryRead(ref reader, out var raw))
+      {
+         value = null;
+         return false;
+      }
+      if (raw is null)
+      {
+         value = null;
+         return true;
+      }
+      char[] charArray = raw.ToCharArray();
+      Array.Reverse(charArray);
+      value = new string(charArray);
+      return true;
+   }
+
+   public static int CalculateByteLength(scoped in string? value)
+   {
+      return Me.Memory.Serialization.Formatters.System.StringSerializer.CalculateByteLength(value);
+   }
+}
+
+[GenerateSerializer]
+public class CustomSerializerTestClass
+{
+   [SerializerPosition(0)]
+   public int Id { get; set; }
+
+   [SerializerPosition(1)]
+   [UseSerializer(typeof(ReverseStringSerializer))]
+   public string? ReversedName { get; set; }
+}
+
 [GenerateSerializer]
 public struct SimpleTestStruct
 {
@@ -210,5 +258,41 @@ public class PolymorphicSerializerTests
          // IgnoredProperty should be null in the deserialized object because it wasn't serialized
          await Assert.That(read.IgnoredProperty).IsNull();
       });
+   }
+
+   [Test]
+   public async Task TestCustomSerializer()
+   {
+      var obj = new CustomSerializerTestClass
+      {
+         Id = 42,
+         ReversedName = "Hello"
+      };
+
+      // Since ReversedName uses ReverseStringSerializer, "Hello" should be reversed to "olleH" on serialization.
+      // Expected size:
+      // presence(1) + Id(4) + string(presence(4) + utf8(5)) = 14 bytes
+      int expectedSize = 1 + sizeof(int) + (sizeof(int) + 5);
+      
+      await TestSerializerDirect<CustomSerializerTestClass?, CustomSerializerTestClassSerializer>(obj, expectedSize, async (read, expected) =>
+      {
+         await Assert.That(read).IsNotNull();
+         await Assert.That(read!.Id).IsEqualTo(expected!.Id);
+         await Assert.That(read.ReversedName).IsEqualTo(expected.ReversedName); // Deserializes and reverses "olleH" back to "Hello"
+      });
+
+      // Directly verify that the raw bytes in the buffer actually contain "olleH" reversed!
+      byte[] buffer = new byte[expectedSize];
+      var writer = new BufferWriter<byte>(buffer);
+      var written = CustomSerializerTestClassSerializer.Write(ref writer, obj);
+      await Assert.That(written).IsEqualTo(expectedSize);
+      
+      // Index 0: presence(1)
+      // Index 1-4: Id (42 as little endian int) -> 42, 0, 0, 0
+      // Index 5-8: string presence length (5 as little endian int) -> 5, 0, 0, 0
+      // Index 9-13: "olleH" bytes
+      var stringBytes = buffer[9..];
+      var rawString = System.Text.Encoding.UTF8.GetString(stringBytes);
+      await Assert.That(rawString).IsEqualTo("olleH");
    }
 }
