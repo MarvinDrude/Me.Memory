@@ -1,5 +1,7 @@
 # Me.Memory
 
+Moved to: https://github.com/MarvinDrude/Beskar.Memory
+
 A collection of ultra-high-performance, span-based, zero-allocation memory structures, custom collections, and data utilities for .NET.
 
 ## 📦 NuGet Packages
